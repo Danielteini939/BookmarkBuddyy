@@ -114,7 +114,7 @@ export default function SettingsPage() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Taxa de juros anual usada como padrão para novos empréstimos
+                          Taxa de juros mensal usada como padrão para novos empréstimos
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

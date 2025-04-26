@@ -102,10 +102,10 @@ export function determineNewLoanStatus(loan: LoanType, payments: PaymentType[]):
  * Calculate the monthly payment amount for a loan
  */
 export function calculateMonthlyPayment(principal: number, interestRate: number, months: number): number {
-  // Convert annual interest rate to monthly rate
-  const monthlyRate = interestRate / 100 / 12;
+  // Converter taxa de juros mensal para decimal
+  const monthlyRate = interestRate / 100;
   
-  // Calculate payment using the formula for EMI
+  // Calcular pagamento usando a fórmula para parcelas fixas
   const payment = principal * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1);
   
   return payment;

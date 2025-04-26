@@ -80,34 +80,37 @@ export default function LoanForm({ loan, isEditing = false }: LoanFormProps) {
   
   useEffect(() => {
     if (principal && interestRate && installments) {
-      // Adjust calculations based on payment frequency
-      let annualizedRate = interestRate;
-      let periodsPerYear = 12; // monthly default
+      // Ajuste dos cálculos com base na frequência de pagamento
+      // Nota: interestRate já é mensal
+      let ratePerPeriod = interestRate / 100; // Taxa mensal em decimal
       
+      // Ajuste da taxa para outras frequências de pagamento
       switch (frequency) {
         case "weekly":
-          periodsPerYear = 52;
+          // Taxa semanal (mensal / ~4.33 semanas)
+          ratePerPeriod = ratePerPeriod / 4.33;
           break;
         case "biweekly":
-          periodsPerYear = 26;
+          // Taxa quinzenal (mensal / ~2.17 quinzenas)
+          ratePerPeriod = ratePerPeriod / 2.17;
           break;
         case "monthly":
-          periodsPerYear = 12;
+          // Mantém a taxa mensal
           break;
         case "quarterly":
-          periodsPerYear = 4;
+          // Taxa trimestral (mensal * 3)
+          ratePerPeriod = ratePerPeriod * 3;
           break;
         case "yearly":
-          periodsPerYear = 1;
+          // Taxa anual (mensal * 12)
+          ratePerPeriod = ratePerPeriod * 12;
           break;
         default:
-          periodsPerYear = 12;
+          // Mantém a taxa mensal por padrão
+          break;
       }
       
-      // Convert annual rate to rate per period
-      const ratePerPeriod = annualizedRate / 100 / periodsPerYear;
-      
-      // Calculate payment using formula for equal installments
+      // Cálculo do pagamento usando fórmula para parcelas iguais
       const payment = principal * ratePerPeriod * Math.pow(1 + ratePerPeriod, installments) / (Math.pow(1 + ratePerPeriod, installments) - 1);
       
       setInstallmentAmount(isNaN(payment) ? 0 : payment);
@@ -240,7 +243,7 @@ export default function LoanForm({ loan, isEditing = false }: LoanFormProps) {
                     />
                   </FormControl>
                   <FormDescription>
-                    Taxa de juros anual
+                    Taxa de juros mensal
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
