@@ -77,10 +77,7 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   // Update loan statuses based on due dates and payments
   useEffect(() => {
     // Usar nossa função utilitária para determinar o status do empréstimo
-    const updatedLoans = loans.map(loan => {
-      // Se já estiver pago, não precisa recalcular
-      if (loan.status === 'paid') return loan;
-      
+    const updatedLoans = loans.map(loan => {      
       // Obter os pagamentos deste empréstimo
       const loanPayments = payments.filter(payment => payment.loanId === loan.id);
       

@@ -114,6 +114,27 @@ export function determineNewLoanStatus(loan: LoanType, payments: PaymentType[]):
     return 'overdue';
   }
   
+  // Verificar se houve pagamento recente (no mês atual)
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  // Ordenar pagamentos por data (mais recente primeiro)
+  const sortedPayments = [...payments].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  // Verificar se existe pagamento no mês atual
+  if (sortedPayments.length > 0) {
+    const latestPayment = sortedPayments[0];
+    const paymentDate = new Date(latestPayment.date);
+    
+    if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
+      // Se tem pagamento no mês atual, marcar como "pago"
+      return 'paid';
+    }
+  }
+  
   return 'active';
 }
 
