@@ -427,7 +427,7 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     futureDate.setDate(today.getDate() + days);
     
     return loans.filter(loan => {
-      // Verificar empréstimos com programação de pagamento (ativos ou vencidos)
+      // Verificar empréstimos com programação de pagamento
       if (!loan.paymentSchedule || !loan.paymentSchedule.nextPaymentDate) return false;
       
       try {
@@ -446,13 +446,22 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
         console.log('Payment Date (zeroed time):', nextPaymentDay);
         console.log('Future Date:', futureDate);
         console.log('Is Valid Date:', !isNaN(nextPaymentDate.getTime()));
-        console.log('Compare today: nextPaymentDay >= today:', nextPaymentDay >= today);
-        console.log('Compare future: nextPaymentDay <= futureDate:', nextPaymentDay <= futureDate);
         
-        // Comparar apenas datas (sem horas/minutos/segundos) para incluir pagamentos do dia atual
+        // IMPORTANTE: Modificado para incluir pagamentos do dia atual
+        // nextPaymentDay <= today significa que o pagamento é devido hoje ou já está atrasado
+        // Queremos exibir estes pagamentos também
+        const isToday = nextPaymentDay.getTime() === today.getTime();
+        console.log('Is Today?', isToday);
+        
+        const isUpcoming = nextPaymentDay > today && nextPaymentDay <= futureDate;
+        console.log('Is Upcoming?', isUpcoming);
+        
+        const isDue = nextPaymentDay <= today; // Devido hoje ou atrasado
+        console.log('Is Due?', isDue);
+        
+        // Retorna true se o pagamento for para hoje, estiver próximo, ou estiver atrasado (mas ainda não pago)
         return !isNaN(nextPaymentDate.getTime()) && 
-               nextPaymentDay >= today && 
-               nextPaymentDay <= futureDate;
+               (isToday || isUpcoming || (isDue && loan.status !== 'paid'));
       } catch (error) {
         console.warn('Erro ao analisar paymentSchedule:', error);
         return false;
