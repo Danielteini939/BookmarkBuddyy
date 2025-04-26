@@ -4,7 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLoan } from "@/context/LoanContext";
 import { calculatePaymentDistribution } from "@/utils/loanCalculations";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, addDays, addMonths } from "date-fns";
+import { PaymentFrequency } from "@/types";
 
 import {
   Form,
@@ -21,6 +22,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarIcon } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 
@@ -29,6 +31,7 @@ const paymentFormSchema = z.object({
   date: z.date(),
   amount: z.coerce.number().positive("Valor deve ser positivo"),
   notes: z.string().optional(),
+  updateNextPaymentDate: z.boolean().default(true),
 });
 
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
@@ -39,7 +42,7 @@ interface PaymentFormProps {
 }
 
 export default function PaymentForm({ loanId, onComplete }: PaymentFormProps) {
-  const { getLoanById, getPaymentsByLoanId, addPayment } = useLoan();
+  const { getLoanById, getPaymentsByLoanId, addPayment, updateLoan } = useLoan();
   const [principal, setPrincipal] = useState(0);
   const [interest, setInterest] = useState(0);
 
@@ -53,6 +56,7 @@ export default function PaymentForm({ loanId, onComplete }: PaymentFormProps) {
       date: new Date(),
       amount: loan?.paymentSchedule?.installmentAmount || 0,
       notes: "",
+      updateNextPaymentDate: true,
     },
   });
 
@@ -72,9 +76,28 @@ export default function PaymentForm({ loanId, onComplete }: PaymentFormProps) {
     }
   }, [loan, amount, previousPayments]);
 
+  // Função para calcular a próxima data de pagamento com base na frequência
+  const calculateNextPaymentDate = (date: Date, frequency: PaymentFrequency): Date => {
+    switch (frequency) {
+      case "weekly":
+        return addDays(date, 7);
+      case "biweekly":
+        return addDays(date, 14);
+      case "monthly":
+        return addMonths(date, 1);
+      case "quarterly":
+        return addMonths(date, 3);
+      case "yearly":
+        return addMonths(date, 12);
+      default:
+        return addMonths(date, 1);
+    }
+  };
+
   const onSubmit = (data: PaymentFormValues) => {
     if (!loan) return;
     
+    // Registrar o pagamento
     addPayment({
       loanId: loan.id,
       date: format(data.date, "yyyy-MM-dd"),
@@ -83,6 +106,27 @@ export default function PaymentForm({ loanId, onComplete }: PaymentFormProps) {
       interest: interest,
       notes: data.notes,
     });
+    
+    // Se o checkbox estiver marcado, atualizar a data do próximo pagamento
+    if (data.updateNextPaymentDate && loan.paymentSchedule) {
+      const frequency = loan.paymentSchedule.frequency as PaymentFrequency;
+      const nextPaymentDate = calculateNextPaymentDate(
+        // Se estamos perto do final do mês, use a data atual para calcular o próximo pagamento
+        // ao invés da data de pagamento no formulário, para evitar problemas com meses de comprimentos diferentes
+        new Date(), 
+        frequency
+      );
+      
+      const updatedPaymentSchedule = {
+        ...loan.paymentSchedule,
+        nextPaymentDate: format(nextPaymentDate, "yyyy-MM-dd"),
+      };
+      
+      // Atualizar o empréstimo com a nova data do próximo pagamento
+      updateLoan(loan.id, {
+        paymentSchedule: updatedPaymentSchedule,
+      });
+    }
     
     if (onComplete) {
       onComplete();
@@ -188,6 +232,28 @@ export default function PaymentForm({ loanId, onComplete }: PaymentFormProps) {
                 </div>
               </div>
             </div>
+
+            {/* Next Payment Date Update Option */}
+            <FormField
+              control={form.control}
+              name="updateNextPaymentDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Atualizar data do próximo pagamento</FormLabel>
+                    <FormDescription>
+                      Quando marcado, a data do próximo pagamento será atualizada automaticamente de acordo com a frequência do empréstimo.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
 
             {/* Notes */}
             <FormField
