@@ -28,9 +28,17 @@ export function calculateRemainingBalance(loan: LoanType, payments: PaymentType[
  * Check if a loan is overdue
  */
 export function isLoanOverdue(loan: LoanType): boolean {
+  // Se o empréstimo não tem programação de pagamento, verifica a data final
+  if (!loan.paymentSchedule) {
+    const today = new Date();
+    const dueDate = parseISO(loan.dueDate);
+    return today > dueDate;
+  }
+  
+  // Verifica a data do próximo pagamento programado
   const today = new Date();
-  const dueDate = parseISO(loan.dueDate);
-  return today > dueDate;
+  const nextPaymentDate = parseISO(loan.paymentSchedule.nextPaymentDate);
+  return today > nextPaymentDate;
 }
 
 /**
@@ -40,8 +48,16 @@ export function getDaysOverdue(loan: LoanType): number {
   if (!isLoanOverdue(loan)) return 0;
   
   const today = new Date();
-  const dueDate = parseISO(loan.dueDate);
-  return differenceInDays(today, dueDate);
+  
+  // Se o empréstimo não tem programação de pagamento, usa a data final
+  if (!loan.paymentSchedule) {
+    const dueDate = parseISO(loan.dueDate);
+    return differenceInDays(today, dueDate);
+  }
+  
+  // Caso contrário, usa a data do próximo pagamento
+  const nextPaymentDate = parseISO(loan.paymentSchedule.nextPaymentDate);
+  return differenceInDays(today, nextPaymentDate);
 }
 
 /**

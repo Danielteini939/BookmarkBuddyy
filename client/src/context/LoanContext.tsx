@@ -76,37 +76,26 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   
   // Update loan statuses based on due dates and payments
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    
+    // Usar nossa função utilitária para determinar o status do empréstimo
     const updatedLoans = loans.map(loan => {
+      // Se já estiver pago, não precisa recalcular
       if (loan.status === 'paid') return loan;
       
+      // Obter os pagamentos deste empréstimo
       const loanPayments = payments.filter(payment => payment.loanId === loan.id);
-      const totalPaid = loanPayments.reduce((sum, payment) => sum + payment.amount, 0);
-      const remainingBalance = calculateRemainingBalance(loan, loanPayments);
       
-      // Check if loan is paid in full
-      if (remainingBalance <= 0) {
-        return { ...loan, status: 'paid' as LoanStatus };
-      }
+      // Determinar o novo status com base nos pagamentos e datas
+      const newStatus = determineNewLoanStatus(loan, loanPayments);
       
-      // Check if loan is overdue
-      if (loan.dueDate < today && loan.status !== 'defaulted') {
-        const dueDate = new Date(loan.dueDate);
-        const currentDate = new Date(today);
-        const daysDifference = Math.floor((currentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        // More than 90 days overdue is defaulted
-        if (daysDifference > 90) {
-          return { ...loan, status: 'defaulted' as LoanStatus };
-        }
-        
-        return { ...loan, status: 'overdue' as LoanStatus };
+      // Se o status mudou, atualizar o empréstimo
+      if (newStatus !== loan.status) {
+        return { ...loan, status: newStatus };
       }
       
       return loan;
     });
     
+    // Atualizar o estado apenas se houve mudanças
     if (JSON.stringify(updatedLoans) !== JSON.stringify(loans)) {
       setLoans(updatedLoans);
     }
