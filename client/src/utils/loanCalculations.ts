@@ -5,7 +5,13 @@ import { differenceInDays, parseISO } from "date-fns";
  * Calculate the total amount due for a loan (principal + interest)
  */
 export function calculateTotalDue(loan: LoanType): number {
-  const interestAmount = (loan.principal * loan.interestRate) / 100;
+  // Obtém o número de parcelas do cronograma de pagamento ou usa um valor padrão
+  const installments = loan.paymentSchedule?.installments || 1;
+  
+  // Calcula o total de juros usando a fórmula de juros simples
+  const monthlyRate = loan.interestRate / 100;
+  const interestAmount = loan.principal * monthlyRate * installments;
+  
   return loan.principal + interestAmount;
 }
 
@@ -46,30 +52,27 @@ export function calculatePaymentDistribution(
   paymentAmount: number,
   previousPayments: PaymentType[]
 ): { principal: number; interest: number } {
-  // Calculate total paid so far
-  const totalPaidSoFar = previousPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  // Para juros simples, o valor da parcela é dividido proporcionalmente entre
+  // principal e juros com base no cálculo original do empréstimo
   
-  // Calculate total interest for the loan
-  const totalInterest = (loan.principal * loan.interestRate) / 100;
+  // Obter número de parcelas do cronograma de pagamento ou usar valor padrão
+  const installments = loan.paymentSchedule?.installments || 1;
   
-  // Calculate interest paid so far
-  const interestPaidSoFar = previousPayments.reduce((sum, payment) => sum + payment.interest, 0);
+  // Calcular juros totais usando a fórmula de juros simples (Principal * Taxa * Tempo)
+  const monthlyRate = loan.interestRate / 100;
+  const totalInterest = loan.principal * monthlyRate * installments;
   
-  // Calculate remaining interest to be paid
-  const remainingInterest = Math.max(0, totalInterest - interestPaidSoFar);
+  // Calcular valor total a ser pago (principal + juros)
+  const totalAmount = loan.principal + totalInterest;
   
-  // If payment exceeds remaining interest, allocate accordingly
-  if (paymentAmount >= remainingInterest) {
-    return {
-      interest: remainingInterest,
-      principal: paymentAmount - remainingInterest,
-    };
-  }
+  // Calcular a proporção de principal e juros no valor total
+  const principalRatio = loan.principal / totalAmount;
+  const interestRatio = totalInterest / totalAmount;
   
-  // Otherwise, all goes to interest
+  // Distribuir o pagamento proporcionalmente
   return {
-    interest: paymentAmount,
-    principal: 0,
+    principal: paymentAmount * principalRatio,
+    interest: paymentAmount * interestRatio
   };
 }
 
