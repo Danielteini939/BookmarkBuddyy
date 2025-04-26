@@ -11,6 +11,17 @@ import { calculateRemainingBalance, determineNewLoanStatus } from "@/utils/loanC
 import { mockBorrowers, mockLoans, mockPayments } from "@/utils/mockData";
 import { parseCSV, generateCSV } from "@/utils/csvHelpers";
 import { useToast } from "@/hooks/use-toast";
+import {
+  loadBorrowers,
+  loadLoans,
+  loadPayments,
+  loadSettings,
+  saveBorrowers,
+  saveLoans,
+  savePayments,
+  saveSettings,
+  generateId
+} from "@/lib/localStorageClient";
 
 interface LoanContextType {
   // Data
@@ -67,12 +78,45 @@ const initialSettings: AppSettings = {
 const LoanContext = createContext<LoanContextType | undefined>(undefined);
 
 export const LoanProvider = ({ children }: { children: ReactNode }) => {
-  const [borrowers, setBorrowers] = useState<BorrowerType[]>(mockBorrowers);
-  const [loans, setLoans] = useState<LoanType[]>(mockLoans);
-  const [payments, setPayments] = useState<PaymentType[]>(mockPayments);
-  const [settings, setSettings] = useState<AppSettings>(initialSettings);
+  // Inicializar com dados do localStorage ou dados mockados
+  const [borrowers, setBorrowers] = useState<BorrowerType[]>(() => {
+    const storedBorrowers = loadBorrowers();
+    return storedBorrowers.length > 0 ? storedBorrowers : mockBorrowers;
+  });
+  
+  const [loans, setLoans] = useState<LoanType[]>(() => {
+    const storedLoans = loadLoans();
+    return storedLoans.length > 0 ? storedLoans : mockLoans;
+  });
+  
+  const [payments, setPayments] = useState<PaymentType[]>(() => {
+    const storedPayments = loadPayments();
+    return storedPayments.length > 0 ? storedPayments : mockPayments;
+  });
+  
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const storedSettings = loadSettings();
+    return storedSettings || initialSettings;
+  });
   
   const { toast } = useToast();
+  
+  // Salvar dados no localStorage sempre que mudar
+  useEffect(() => {
+    saveBorrowers(borrowers);
+  }, [borrowers]);
+  
+  useEffect(() => {
+    saveLoans(loans);
+  }, [loans]);
+  
+  useEffect(() => {
+    savePayments(payments);
+  }, [payments]);
+  
+  useEffect(() => {
+    saveSettings(settings);
+  }, [settings]);
   
   // Update loan statuses based on due dates and payments
   useEffect(() => {
