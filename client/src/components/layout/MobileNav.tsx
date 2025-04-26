@@ -8,11 +8,16 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function MobileNav() {
-  // Check if the current route matches the given pattern
-  const isActive = (pattern: string) => {
-    const [match] = useRoute(pattern);
-    return match;
-  };
+  // Using separate hooks for each route pattern
+  const [isDashboard] = useRoute("/");
+  const [isLoans] = useRoute("/loans*");
+  const [isBorrowers] = useRoute("/borrowers*");
+  const [isPayments] = useRoute("/payments*");
+  const [isReports] = useRoute("/reports*");
+  const [isSettings] = useRoute("/settings*");
+  
+  // Calculate "more" section active state
+  const isMoreActive = isPayments || isReports || isSettings;
 
   return (
     <div className="bg-white w-full border-t border-slate-200 fixed bottom-0 md:hidden z-50">
@@ -21,25 +26,25 @@ export default function MobileNav() {
           href="/"
           icon={LayoutDashboard}
           label="Dashboard"
-          active={isActive("/")}
+          active={isDashboard}
         />
         <NavItem
           href="/loans"
           icon={CreditCard}
           label="Empréstimos"
-          active={isActive("/loans*")}
+          active={isLoans}
         />
         <NavItem
           href="/borrowers"
           icon={Users}
           label="Mutuários"
-          active={isActive("/borrowers*")}
+          active={isBorrowers}
         />
         <NavItem
           href="/settings"
           icon={MoreHorizontal}
           label="Mais"
-          active={isActive("/payments*") || isActive("/reports*") || isActive("/settings*")}
+          active={isMoreActive}
         />
       </div>
     </div>
@@ -55,16 +60,15 @@ interface NavItemProps {
 
 function NavItem({ href, icon: Icon, label, active }: NavItemProps) {
   return (
-    <Link href={href}>
-      <a
-        className={cn(
-          "flex flex-col items-center p-2",
-          active ? "text-primary" : "text-slate-500"
-        )}
-      >
-        <Icon className="h-6 w-6" />
-        <span className="text-xs">{label}</span>
-      </a>
+    <Link 
+      href={href}
+      className={cn(
+        "flex flex-col items-center p-2",
+        active ? "text-primary" : "text-slate-500"
+      )}
+    >
+      <Icon className="h-6 w-6" />
+      <span className="text-xs">{label}</span>
     </Link>
   );
 }
