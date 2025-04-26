@@ -110,8 +110,11 @@ export default function LoanForm({ loan, isEditing = false }: LoanFormProps) {
           break;
       }
       
-      // Cálculo do pagamento usando fórmula para parcelas iguais
-      const payment = principal * ratePerPeriod * Math.pow(1 + ratePerPeriod, installments) / (Math.pow(1 + ratePerPeriod, installments) - 1);
+      // Para cálculo simples com juros fixos em cada parcela
+      // Valor da parcela = (Principal + Juros Total) / Número de parcelas
+      // onde Juros Total = Principal * Taxa * Número de parcelas
+      const totalInterest = principal * ratePerPeriod * installments;
+      const payment = (principal + totalInterest) / installments;
       
       setInstallmentAmount(isNaN(payment) ? 0 : payment);
     } else {
