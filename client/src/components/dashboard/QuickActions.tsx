@@ -47,12 +47,12 @@ export default function QuickActions() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {actions.map((action) => (
             <Link key={action.title} href={action.href}>
-              <a className={`flex flex-col items-center p-4 rounded-lg transition-colors ${action.bgColor}`}>
+              <div className={`flex flex-col items-center p-4 rounded-lg transition-colors ${action.bgColor} cursor-pointer`}>
                 <div className={`h-10 w-10 rounded-full ${action.iconBgColor} flex items-center justify-center ${action.iconColor} mb-3`}>
                   {action.icon}
                 </div>
                 <span className="text-sm font-medium text-slate-900">{action.title}</span>
-              </a>
+              </div>
             </Link>
           ))}
         </div>
