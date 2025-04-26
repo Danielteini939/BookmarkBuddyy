@@ -4,17 +4,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { useLoan } from "@/context/LoanContext";
 import { formatCurrency, formatDate } from "@/utils/formatters";
-import { parseISO, addMonths, isBefore } from "date-fns";
+import { parseISO, addDays, isBefore } from "date-fns";
 
 export default function UpcomingPayments() {
-  const { loans, getBorrowerById } = useLoan();
+  const { getUpcomingDueLoans, getBorrowerById } = useLoan();
   
-  // Get upcoming payments (next 30 days)
-  const today = new Date();
-  const thirtyDaysLater = addMonths(today, 1);
+  // Obter empréstimos com vencimento nos próximos 30 dias
+  const upcomingLoans = getUpcomingDueLoans(30);
   
-  const upcomingPayments = loans
-    .filter(loan => loan.status === 'active' && loan.paymentSchedule)
+  // Preparar dados para exibição
+  const upcomingPayments = upcomingLoans
+    .filter(loan => loan.paymentSchedule) // garantir que tem programação de pagamento
     .map(loan => {
       const borrower = getBorrowerById(loan.borrowerId);
       return {
@@ -26,11 +26,9 @@ export default function UpcomingPayments() {
         date: loan.paymentSchedule?.nextPaymentDate || '',
       };
     })
-    .filter(payment => {
-      const paymentDate = parseISO(payment.date);
-      return isBefore(paymentDate, thirtyDaysLater) && !isBefore(paymentDate, today);
-    })
+    // Ordenar por data de pagamento (mais próximos primeiro)
     .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime())
+    // Limitar a 5 resultados para o dashboard
     .slice(0, 5);
   
   return (

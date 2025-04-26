@@ -397,10 +397,12 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     futureDate.setDate(today.getDate() + days);
     
     return loans.filter(loan => {
-      if (loan.status !== 'active') return false;
+      // Verificar apenas empréstimos ativos com programação de pagamento
+      if (loan.status !== 'active' || !loan.paymentSchedule) return false;
       
-      const dueDate = new Date(loan.dueDate);
-      return dueDate >= today && dueDate <= futureDate;
+      // Verificar a data do próximo pagamento, não a data de vencimento do empréstimo
+      const nextPaymentDate = new Date(loan.paymentSchedule.nextPaymentDate);
+      return nextPaymentDate >= today && nextPaymentDate <= futureDate;
     });
   };
   
