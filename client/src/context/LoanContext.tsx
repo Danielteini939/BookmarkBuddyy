@@ -419,7 +419,10 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const getUpcomingDueLoans = (days: number) => {
+    // Definir hoje com hora, minutos e segundos zerados para comparação de datas por dia
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     const futureDate = new Date(today);
     futureDate.setDate(today.getDate() + days);
     
@@ -431,17 +434,25 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
         // Verificar a data do próximo pagamento usando parseISO para formato ISO
         const nextPaymentDate = parseISO(loan.paymentSchedule.nextPaymentDate);
         
+        // Zerar horas, minutos e segundos para comparação apenas por dia
+        const nextPaymentDay = new Date(nextPaymentDate);
+        nextPaymentDay.setHours(0, 0, 0, 0);
+        
         // Para debugging
         console.log('Loan ID:', loan.id);
         console.log('Payment Date String:', loan.paymentSchedule.nextPaymentDate);
         console.log('Payment Date Parsed:', nextPaymentDate);
+        console.log('Today (zeroed time):', today);
+        console.log('Payment Date (zeroed time):', nextPaymentDay);
+        console.log('Future Date:', futureDate);
         console.log('Is Valid Date:', !isNaN(nextPaymentDate.getTime()));
-        console.log('Compare with today:', nextPaymentDate >= today);
-        console.log('Compare with future:', nextPaymentDate <= futureDate);
+        console.log('Compare today: nextPaymentDay >= today:', nextPaymentDay >= today);
+        console.log('Compare future: nextPaymentDay <= futureDate:', nextPaymentDay <= futureDate);
         
+        // Comparar apenas datas (sem horas/minutos/segundos) para incluir pagamentos do dia atual
         return !isNaN(nextPaymentDate.getTime()) && 
-               nextPaymentDate >= today && 
-               nextPaymentDate <= futureDate;
+               nextPaymentDay >= today && 
+               nextPaymentDay <= futureDate;
       } catch (error) {
         console.warn('Erro ao analisar paymentSchedule:', error);
         return false;
