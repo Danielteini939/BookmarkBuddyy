@@ -80,9 +80,21 @@ export default function LoanForm({ loan, isEditing = false }: LoanFormProps) {
   
   useEffect(() => {
     if (principal && interestRate && installments) {
+      // Converter strings para números
+      const principalAmount = parseFloat(principal as string);
+      const rateValue = parseFloat(interestRate as string);
+      const installmentCount = parseInt(installments as string);
+      
+      // Verificar se os valores são válidos
+      if (isNaN(principalAmount) || isNaN(rateValue) || isNaN(installmentCount) || 
+          principalAmount <= 0 || rateValue <= 0 || installmentCount <= 0) {
+        setInstallmentAmount(0);
+        return;
+      }
+      
       // Ajuste dos cálculos com base na frequência de pagamento
-      // Nota: interestRate já é mensal
-      let ratePerPeriod = interestRate / 100; // Taxa mensal em decimal
+      // Nota: rateValue já é mensal
+      let ratePerPeriod = rateValue / 100; // Taxa mensal em decimal
       
       // Ajuste da taxa para outras frequências de pagamento
       switch (frequency) {
@@ -113,8 +125,8 @@ export default function LoanForm({ loan, isEditing = false }: LoanFormProps) {
       // Para cálculo simples com juros fixos em cada parcela
       // Valor da parcela = (Principal + Juros Total) / Número de parcelas
       // onde Juros Total = Principal * Taxa * Número de parcelas
-      const totalInterest = principal * ratePerPeriod * installments;
-      const payment = (principal + totalInterest) / installments;
+      const totalInterest = principalAmount * ratePerPeriod * installmentCount;
+      const payment = (principalAmount + totalInterest) / installmentCount;
       
       setInstallmentAmount(isNaN(payment) ? 0 : payment);
     } else {

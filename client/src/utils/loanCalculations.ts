@@ -105,6 +105,12 @@ export function determineNewLoanStatus(loan: LoanType, payments: PaymentType[]):
  * Calculate the monthly payment amount for a loan using simple interest
  */
 export function calculateMonthlyPayment(principal: number, interestRate: number, months: number): number {
+  // Verificar se os valores são válidos
+  if (isNaN(principal) || isNaN(interestRate) || isNaN(months) || 
+      principal <= 0 || interestRate <= 0 || months <= 0) {
+    return 0;
+  }
+  
   // Converter taxa de juros mensal para decimal
   const monthlyRate = interestRate / 100;
   
