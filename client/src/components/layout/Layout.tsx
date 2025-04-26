@@ -3,7 +3,6 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import MobileNav from "./MobileNav";
 import { useLocation } from "wouter";
-import { LoanProvider } from "@/context/LoanContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,25 +13,23 @@ export default function Layout({ children }: LayoutProps) {
   const title = getPageTitle(location);
 
   return (
-    <LoanProvider>
-      <div className="bg-slate-50 text-slate-900 h-screen flex overflow-hidden">
-        {/* Sidebar for desktop */}
-        <Sidebar />
+    <div className="bg-slate-50 text-slate-900 h-screen flex overflow-hidden">
+      {/* Sidebar for desktop */}
+      <Sidebar />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header title={title} />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title={title} />
 
-          {/* Main content with scrolling */}
-          <main className="flex-1 overflow-y-auto p-4 bg-slate-50 pb-16 md:pb-4">
-            <div className="max-w-7xl mx-auto">{children}</div>
-          </main>
-        </div>
-
-        {/* Mobile Navigation */}
-        <MobileNav />
+        {/* Main content with scrolling */}
+        <main className="flex-1 overflow-y-auto p-4 bg-slate-50 pb-16 md:pb-4">
+          <div className="max-w-7xl mx-auto">{children}</div>
+        </main>
       </div>
-    </LoanProvider>
+
+      {/* Mobile Navigation */}
+      <MobileNav />
+    </div>
   );
 }
 

@@ -44,8 +44,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LoanProvider>
         <TooltipProvider>
-          <Toaster />
           <Router />
+          <Toaster />
         </TooltipProvider>
       </LoanProvider>
     </QueryClientProvider>
