@@ -59,6 +59,7 @@ export type DashboardMetrics = {
   paidLoanCount: number;
   overdueLoanCount: number;
   defaultedLoanCount: number;
+  totalReceivedThisMonth: number;
 };
 
 export type AppSettings = {

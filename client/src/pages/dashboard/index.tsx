@@ -2,7 +2,8 @@ import {
   DollarSign, 
   TrendingUp, 
   Clock, 
-  Users
+  Users,
+  Wallet
 } from "lucide-react";
 import MetricCard from "@/components/dashboard/MetricCard";
 import LoanStatusChart from "@/components/dashboard/LoanStatusChart";
@@ -25,7 +26,7 @@ export default function Dashboard() {
   return (
     <div>
       {/* Dashboard Summary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
         <MetricCard 
           title="Total Emprestado" 
           value={metrics.totalLoaned}
@@ -49,6 +50,19 @@ export default function Dashboard() {
             value: `${interestGrowthLastMonth}%`,
             isPositive: true,
             label: "este mês"
+          }}
+        />
+        
+        <MetricCard 
+          title="Recebido este Mês" 
+          value={metrics.totalReceivedThisMonth}
+          icon={<Wallet className="h-6 w-6" />}
+          iconBgColor="bg-green-100"
+          iconColor="text-green-500"
+          change={{
+            value: "Atual",
+            isPositive: true,
+            label: "no mês"
           }}
         />
         

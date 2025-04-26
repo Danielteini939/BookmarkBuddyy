@@ -356,6 +356,19 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
       return sum + calculateRemainingBalance(loan, loanPayments);
     }, 0);
     
+    // Calcular total recebido no mês atual
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const totalReceivedThisMonth = payments.reduce((sum, payment) => {
+      const paymentDate = new Date(payment.date);
+      // Verificar se o pagamento foi feito no mês atual
+      if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
+        return sum + payment.amount;
+      }
+      return sum;
+    }, 0);
+    
     const activeLoanCount = loans.filter(loan => loan.status === 'active').length;
     const paidLoanCount = loans.filter(loan => loan.status === 'paid').length;
     const overdueLoanCount = loans.filter(loan => loan.status === 'overdue').length;
@@ -369,7 +382,8 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
       activeLoanCount,
       paidLoanCount,
       overdueLoanCount,
-      defaultedLoanCount
+      defaultedLoanCount,
+      totalReceivedThisMonth
     };
   };
   
