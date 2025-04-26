@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLoan } from "@/context/LoanContext";
 import { calculatePaymentDistribution } from "@/utils/loanCalculations";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 import {
   Form,

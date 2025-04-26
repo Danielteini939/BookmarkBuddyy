@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 import { useLoan } from "@/context/LoanContext";
 import { LoanType, PaymentFrequency } from "@/types";
 import { calculateMonthlyPayment } from "@/utils/loanCalculations";
-import { format, addMonths, addDays, addWeeks } from "date-fns";
+import { format, addMonths, addDays, addWeeks, parseISO } from "date-fns";
 
 import {
   Form,
@@ -64,8 +64,8 @@ export default function LoanForm({ loan, isEditing = false }: LoanFormProps) {
       borrowerId: loan?.borrowerId || "",
       principal: loan?.principal || 0,
       interestRate: loan?.interestRate || settings.defaultInterestRate,
-      issueDate: loan ? new Date(loan.issueDate) : new Date(),
-      dueDate: loan ? new Date(loan.dueDate) : addMonths(new Date(), 12),
+      issueDate: loan ? parseISO(loan.issueDate) : new Date(),
+      dueDate: loan ? parseISO(loan.dueDate) : addMonths(new Date(), 12),
       frequency: (loan?.paymentSchedule?.frequency || settings.defaultPaymentFrequency) as PaymentFrequency,
       installments: loan?.paymentSchedule?.installments || settings.defaultInstallments,
       notes: loan?.notes || "",
