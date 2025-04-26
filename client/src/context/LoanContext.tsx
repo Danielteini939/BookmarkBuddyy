@@ -400,6 +400,18 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   // Import/Export
   const importData = (csvData: string) => {
     try {
+      // Verificar se o CSV contém as seções necessárias
+      if (!csvData.includes('[BORROWERS]') || 
+          !csvData.includes('[LOANS]') || 
+          !csvData.includes('[PAYMENTS]')) {
+        toast({
+          title: "Erro na importação",
+          description: "O arquivo CSV não contém as seções necessárias: [BORROWERS], [LOANS], [PAYMENTS]",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       const { importedBorrowers, importedLoans, importedPayments } = parseCSV(csvData);
       
       // Update state with imported data
@@ -409,12 +421,23 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
       
       toast({
         title: "Dados importados",
-        description: `Importado com sucesso: ${importedBorrowers.length} mutuários, ${importedLoans.length} empréstimos, ${importedPayments.length} pagamentos.`
+        description: "Importado com sucesso: " + importedBorrowers.length + " mutuários, " + 
+                    importedLoans.length + " empréstimos, " + 
+                    importedPayments.length + " pagamentos."
       });
     } catch (error) {
+      console.error("Erro ao importar CSV:", error);
+      
+      // Mensagem de erro mais específica
+      let errorMessage = "Falha ao importar dados. Verifique o formato do arquivo CSV.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Erro na importação",
-        description: "Falha ao importar dados. Verifique o formato do arquivo CSV.",
+        description: errorMessage,
         variant: "destructive"
       });
     }
