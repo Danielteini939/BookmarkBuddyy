@@ -11,6 +11,7 @@ import { calculateRemainingBalance, determineNewLoanStatus } from "@/utils/loanC
 import { mockBorrowers, mockLoans, mockPayments } from "@/utils/mockData";
 import { parseCSV, generateCSV } from "@/utils/csvHelpers";
 import { useToast } from "@/hooks/use-toast";
+import { parseISO } from "date-fns";
 import {
   loadBorrowers,
   loadLoans,
@@ -423,12 +424,28 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     futureDate.setDate(today.getDate() + days);
     
     return loans.filter(loan => {
-      // Verificar apenas empréstimos ativos com programação de pagamento
-      if (loan.status !== 'active' || !loan.paymentSchedule) return false;
+      // Verificar empréstimos com programação de pagamento (ativos ou vencidos)
+      if (!loan.paymentSchedule || !loan.paymentSchedule.nextPaymentDate) return false;
       
-      // Verificar a data do próximo pagamento, não a data de vencimento do empréstimo
-      const nextPaymentDate = new Date(loan.paymentSchedule.nextPaymentDate);
-      return nextPaymentDate >= today && nextPaymentDate <= futureDate;
+      try {
+        // Verificar a data do próximo pagamento usando parseISO para formato ISO
+        const nextPaymentDate = parseISO(loan.paymentSchedule.nextPaymentDate);
+        
+        // Para debugging
+        console.log('Loan ID:', loan.id);
+        console.log('Payment Date String:', loan.paymentSchedule.nextPaymentDate);
+        console.log('Payment Date Parsed:', nextPaymentDate);
+        console.log('Is Valid Date:', !isNaN(nextPaymentDate.getTime()));
+        console.log('Compare with today:', nextPaymentDate >= today);
+        console.log('Compare with future:', nextPaymentDate <= futureDate);
+        
+        return !isNaN(nextPaymentDate.getTime()) && 
+               nextPaymentDate >= today && 
+               nextPaymentDate <= futureDate;
+      } catch (error) {
+        console.warn('Erro ao analisar paymentSchedule:', error);
+        return false;
+      }
     });
   };
   
