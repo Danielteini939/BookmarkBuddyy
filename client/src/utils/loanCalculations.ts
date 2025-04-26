@@ -98,43 +98,59 @@ export function calculatePaymentDistribution(
 export function determineNewLoanStatus(loan: LoanType, payments: PaymentType[]): LoanStatus {
   const remainingBalance = calculateRemainingBalance(loan, payments);
   
-  // If fully paid, return 'paid' status
+  // Se o empréstimo foi totalmente pago (o saldo restante é zero ou negativo)
   if (remainingBalance <= 0) {
     return 'paid';
   }
   
-  // Check if loan is overdue
-  const daysOverdue = getDaysOverdue(loan);
-  
-  if (daysOverdue > 90) {
-    return 'defaulted';
-  }
-  
-  if (daysOverdue > 0) {
-    return 'overdue';
-  }
-  
-  // Verificar se houve pagamento recente (no mês atual)
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   
-  // Ordenar pagamentos por data (mais recente primeiro)
-  const sortedPayments = [...payments].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  // Verificar se existe um pagamento no mês atual
+  // Esta é a lógica principal para determinar se o empréstimo está "Pago" no mês atual
+  const hasCurrentMonthPayment = payments.some(payment => {
+    const paymentDate = new Date(payment.date);
+    return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+  });
   
-  // Verificar se existe pagamento no mês atual
-  if (sortedPayments.length > 0) {
-    const latestPayment = sortedPayments[0];
-    const paymentDate = new Date(latestPayment.date);
+  // Se tem um pagamento no mês atual, marcar como "Pago"
+  if (hasCurrentMonthPayment) {
+    return 'paid';
+  }
+  
+  // Se não tem pagamento no mês atual, verificar se está vencido
+  
+  // Se tem uma programação de pagamento definida, usar a data do próximo pagamento
+  if (loan.paymentSchedule && loan.paymentSchedule.nextPaymentDate) {
+    const nextPaymentDate = new Date(loan.paymentSchedule.nextPaymentDate);
+    const today = new Date();
     
-    if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
-      // Se tem pagamento no mês atual, marcar como "pago"
-      return 'paid';
+    // Se a data do próximo pagamento já passou, considerar vencido
+    if (nextPaymentDate < today) {
+      // Se estiver vencido por mais de 90 dias, considerar inadimplente
+      const daysOverdue = Math.floor((today.getTime() - nextPaymentDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysOverdue > 90) {
+        return 'defaulted';
+      }
+      
+      return 'overdue';
+    }
+  } else {
+    // Usar a lógica anterior se não houver programação de pagamento
+    const daysOverdue = getDaysOverdue(loan);
+    
+    if (daysOverdue > 90) {
+      return 'defaulted';
+    }
+    
+    if (daysOverdue > 0) {
+      return 'overdue';
     }
   }
   
+  // Se não tem pagamento no mês atual e não está vencido, considerar ativo
   return 'active';
 }
 

@@ -237,13 +237,9 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     
     setPayments(prev => [...prev, newPayment]);
     
-    // Update loan status based on payment
-    const updatedLoanPayments = [...payments, newPayment].filter(p => p.loanId === loan.id);
-    const newStatus = determineNewLoanStatus(loan, updatedLoanPayments);
-    
-    if (newStatus !== loan.status) {
-      updateLoan(loan.id, { status: newStatus });
-    }
+    // Atualizar o empréstimo para "Pago" imediatamente após registrar o pagamento do mês atual
+    // Isso garante que o status seja atualizado mesmo que a data de vencimento já tenha passado
+    updateLoan(loan.id, { status: 'paid' });
     
     toast({
       title: "Pagamento registrado",
