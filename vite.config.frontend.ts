@@ -7,6 +7,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
+  root: 'client', // Define a pasta client como raiz
+  publicDir: '../attached_assets', // Pasta para assets públicos
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './client/src'),
@@ -15,7 +17,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: '../dist', // Saída na pasta dist na raiz do projeto
     emptyOutDir: true,
   },
 });
