@@ -1,10 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
+
+// Simulação de usuário para fins de demonstração
+interface DemoUser {
+  id: string;
+  email: string;
+}
 
 interface AuthContextType {
   session: Session | null;
-  user: User | null;
+  user: DemoUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any, user: any }>;
@@ -13,41 +18,95 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Dados de demonstração
+const demoUsers = [
+  { email: "admin@exemplo.com", password: "senha123", id: "1" },
+  { email: "usuario@teste.com", password: "123456", id: "2" }
+];
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<DemoUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar sessão atual
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Verificar se há um usuário salvo no localStorage
+    const savedUser = localStorage.getItem('demoUser');
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+      setSession({ user: parsedUser } as Session);
+    }
+    
+    // Simulação de carregamento
+    const timer = setTimeout(() => {
       setLoading(false);
-    });
-
-    // Configurar listener para mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    // Simular um delay para parecer uma requisição real
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Verificar se o usuário existe na nossa "base de dados" de demonstração
+    const foundUser = demoUsers.find(
+      u => u.email === email && u.password === password
+    );
+    
+    if (foundUser) {
+      const user = { id: foundUser.id, email: foundUser.email };
+      setUser(user);
+      setSession({ user } as Session);
+      localStorage.setItem('demoUser', JSON.stringify(user));
+      return { error: null };
+    }
+    
+    return {
+      error: {
+        message: "Credenciais inválidas. Tente novamente."
+      }
+    };
   };
 
   const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    return { error, user: data.user };
+    // Simular um delay para parecer uma requisição real
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Verificar se o email já existe
+    const userExists = demoUsers.some(u => u.email === email);
+    
+    if (userExists) {
+      return {
+        error: {
+          message: "Este email já está em uso."
+        },
+        user: null
+      };
+    }
+    
+    // Criar novo usuário (apenas na memória, em um app real seria salvo no banco)
+    const newUser = { 
+      id: `${demoUsers.length + 1}`, 
+      email,
+      password // Em um app real nunca salvaríamos senhas em texto puro
+    };
+    
+    // Adicionar à lista de usuários (simulação)
+    demoUsers.push(newUser);
+    
+    // Retornar sucesso
+    return { 
+      error: null, 
+      user: { id: newUser.id, email: newUser.email } 
+    };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    localStorage.removeItem('demoUser');
   };
 
   return (
