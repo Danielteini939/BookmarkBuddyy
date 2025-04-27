@@ -10,6 +10,7 @@ import LoanStatusChart from "@/components/dashboard/LoanStatusChart";
 import StatusSummary from "@/components/dashboard/StatusSummary";
 import RecentLoans from "@/components/dashboard/RecentLoans";
 import UpcomingPayments from "@/components/dashboard/UpcomingPayments";
+import OverdueLoans from "@/components/dashboard/OverdueLoans";
 import QuickActions from "@/components/dashboard/QuickActions";
 import { useLoan } from "@/context/LoanContext";
 
@@ -106,6 +107,11 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <RecentLoans />
         <UpcomingPayments />
+      </div>
+
+      {/* Overdue Loans Section */}
+      <div className="mb-6">
+        <OverdueLoans />
       </div>
 
       {/* Quick Actions Section */}
