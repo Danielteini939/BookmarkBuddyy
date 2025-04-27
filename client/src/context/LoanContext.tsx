@@ -22,7 +22,7 @@ import {
   savePayments,
   saveSettings,
   generateId
-} from "@/lib/localStorageClient";
+} from "@/lib/memoryClient";
 
 interface LoanContextType {
   // Data
