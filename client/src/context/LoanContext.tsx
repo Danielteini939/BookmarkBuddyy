@@ -479,26 +479,82 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Import/Export
-  const importData = (csvData: string) => {
+  const importData = (data: string) => {
     try {
-      // Verificar se o CSV contém as seções necessárias
-      if (!csvData.includes('[BORROWERS]') || 
-          !csvData.includes('[LOANS]') || 
-          !csvData.includes('[PAYMENTS]')) {
-        toast({
-          title: "Erro na importação",
-          description: "O arquivo CSV não contém as seções necessárias: [BORROWERS], [LOANS], [PAYMENTS]",
-          variant: "destructive"
+      // Verifica se é JSON ou CSV
+      let importedBorrowers: BorrowerType[] = [];
+      let importedLoans: LoanType[] = [];
+      let importedPayments: PaymentType[] = [];
+      
+      // Tenta analisar como JSON primeiro
+      try {
+        const jsonData = JSON.parse(data);
+        
+        // Verifica se o JSON contém as estruturas esperadas
+        if (Array.isArray(jsonData.borrowers) && 
+            Array.isArray(jsonData.loans) && 
+            Array.isArray(jsonData.payments)) {
+          
+          importedBorrowers = jsonData.borrowers;
+          importedLoans = jsonData.loans;
+          importedPayments = jsonData.payments;
+          
+          console.log("Dados importados de JSON:", {
+            borrowers: importedBorrowers.length,
+            loans: importedLoans.length,
+            payments: importedPayments.length
+          });
+        } else {
+          throw new Error("Estrutura de dados JSON inválida");
+        }
+      } catch (jsonError) {
+        // Se falhar como JSON, tenta como CSV
+        console.log("Não é um JSON válido, tentando CSV...");
+        
+        // Verificar se o CSV contém as seções necessárias
+        if (!data.includes('[BORROWERS]') || 
+            !data.includes('[LOANS]') || 
+            !data.includes('[PAYMENTS]')) {
+          throw new Error("O arquivo CSV não contém as seções necessárias: [BORROWERS], [LOANS], [PAYMENTS]");
+        }
+        
+        const parsed = parseCSV(data);
+        importedBorrowers = parsed.importedBorrowers;
+        importedLoans = parsed.importedLoans;
+        importedPayments = parsed.importedPayments;
+        
+        console.log("Dados importados de CSV:", {
+          borrowers: importedBorrowers.length,
+          loans: importedLoans.length,
+          payments: importedPayments.length
         });
-        return;
       }
       
-      const { importedBorrowers, importedLoans, importedPayments } = parseCSV(csvData);
+      // Validar relacionamentos entre entidades
+      const borrowerIds = new Set(importedBorrowers.map(b => b.id));
       
-      // Update state with imported data
+      // Verificar se todos os empréstimos referenciam mutuários existentes
+      const invalidLoans = importedLoans.filter(loan => !borrowerIds.has(loan.borrowerId));
+      if (invalidLoans.length > 0) {
+        console.warn(`${invalidLoans.length} empréstimos referenciam mutuários inexistentes.`);
+      }
+      
+      // Verificar se todos os pagamentos referenciam empréstimos existentes
+      const loanIds = new Set(importedLoans.map(l => l.id));
+      const invalidPayments = importedPayments.filter(payment => !loanIds.has(payment.loanId));
+      if (invalidPayments.length > 0) {
+        console.warn(`${invalidPayments.length} pagamentos referenciam empréstimos inexistentes.`);
+      }
+      
+      // Atualizar o estado com os dados importados
       setBorrowers(importedBorrowers);
       setLoans(importedLoans);
       setPayments(importedPayments);
+      
+      // Salvar no localStorage
+      saveBorrowers(importedBorrowers);
+      saveLoans(importedLoans);
+      savePayments(importedPayments);
       
       toast({
         title: "Dados importados",
@@ -507,10 +563,10 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
                     importedPayments.length + " pagamentos."
       });
     } catch (error) {
-      console.error("Erro ao importar CSV:", error);
+      console.error("Erro ao importar dados:", error);
       
       // Mensagem de erro mais específica
-      let errorMessage = "Falha ao importar dados. Verifique o formato do arquivo CSV.";
+      let errorMessage = "Falha ao importar dados. Verifique o formato do arquivo.";
       
       if (error instanceof Error) {
         errorMessage = error.message;
@@ -521,6 +577,9 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
         description: errorMessage,
         variant: "destructive"
       });
+      
+      // Re-lançar o erro para que o chamador possa lidar com ele, se necessário
+      throw error;
     }
   };
   
