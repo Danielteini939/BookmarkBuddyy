@@ -1,10 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.SUPABASE_ANON_KEY || "";
+// Demo values para fins de demonstração - em produção devem ser configurados adequadamente
+const supabaseUrl = "https://demo-supabase-url.supabase.co";
+const supabaseAnonKey = "demo-anon-key";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Supabase URL ou Anon Key não configurados corretamente");
-}
-
+// Criar cliente Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

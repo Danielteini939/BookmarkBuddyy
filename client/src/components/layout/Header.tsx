@@ -1,8 +1,18 @@
 import { useState } from "react";
-import { Menu, Bell } from "lucide-react";
+import { Menu, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLoan } from "@/context/LoanContext";
+import { useAuth } from "@/context/AuthContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 import Sidebar from "./Sidebar";
 import { useLocation } from "wouter";
 
@@ -11,8 +21,33 @@ interface HeaderProps {
 }
 
 export default function Header({ title }: HeaderProps) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const pageTitle = getPageTitle(location);
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logout realizado com sucesso",
+        description: "Você foi desconectado do sistema",
+      });
+      navigate("/auth");
+    } catch (error) {
+      toast({
+        title: "Erro ao fazer logout",
+        description: "Ocorreu um problema ao tentar sair do sistema",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Obter as iniciais do usuário para exibir no avatar
+  const getUserInitials = () => {
+    if (!user || !user.email) return "?";
+    return user.email.substring(0, 2).toUpperCase();
+  };
 
   return (
     <header className="bg-white shadow-sm z-10">
@@ -40,14 +75,27 @@ export default function Header({ title }: HeaderProps) {
             <Bell className="h-6 w-6" />
             <span className="sr-only">Notifications</span>
           </Button>
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white">
-              <span className="text-sm font-medium">JD</span>
-            </div>
-            <span className="ml-2 text-sm font-medium text-slate-700 hidden sm:block">
-              João Silva
-            </span>
-          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center cursor-pointer">
+                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white">
+                  <span className="text-sm font-medium">{getUserInitials()}</span>
+                </div>
+                <span className="ml-2 text-sm font-medium text-slate-700 hidden sm:block">
+                  {user?.email || "Usuário"}
+                </span>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
