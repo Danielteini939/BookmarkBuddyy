@@ -13,7 +13,7 @@ export default function Layout({ children }: LayoutProps) {
   const title = getPageTitle(location);
 
   return (
-    <div className="bg-slate-50 text-slate-900 h-screen flex overflow-hidden">
+    <div className="bg-background text-foreground h-screen flex overflow-hidden">
       {/* Sidebar for desktop */}
       <Sidebar />
 
@@ -22,8 +22,10 @@ export default function Layout({ children }: LayoutProps) {
         <Header title={title} />
 
         {/* Main content with scrolling */}
-        <main className="flex-1 overflow-y-auto p-4 bg-slate-50 pb-16 md:pb-4">
-          <div className="max-w-7xl mx-auto">{children}</div>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-background pb-16 md:pb-4">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
 
