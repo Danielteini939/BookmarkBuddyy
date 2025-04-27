@@ -79,42 +79,10 @@ export default function SettingsPage() {
   const [showJsonImport, setShowJsonImport] = useState<boolean>(false);
   const [jsonImportErrors, setJsonImportErrors] = useState<string[]>([]);
   
-  // Carregar lista de backups automáticos no carregamento da página
+  // Aviso sobre modo sem persistência
   useEffect(() => {
-    const backups = getAutoBackupsList();
-    setAutoBackupsList(backups);
-    
-    // Verificar se o backup automático está habilitado
-    const autoBackupEnabled = localStorage.getItem('loanbuddy_auto_backup_enabled');
-    setEnableAutoBackup(autoBackupEnabled === 'true');
-    
-    // Carregar intervalo de backup
-    const interval = localStorage.getItem('loanbuddy_auto_backup_interval');
-    if (interval) {
-      setBackupInterval(interval);
-    }
+    console.log("Sistema operando sem persistência de dados. Dados existem apenas em memória.");
   }, []);
-  
-  // Atualizar configuração de backup automático
-  useEffect(() => {
-    localStorage.setItem('loanbuddy_auto_backup_enabled', enableAutoBackup.toString());
-    
-    // Configurar intervalo de backup automático se habilitado
-    if (enableAutoBackup) {
-      saveAutoBackup(borrowers, loans, payments, settings);
-      toast({
-        title: "Backup automático configurado",
-        description: `Os dados serão salvos ${backupInterval === 'daily' ? 'diariamente' : 
-                      backupInterval === 'weekly' ? 'semanalmente' : 
-                      'mensalmente'}.`,
-      });
-    }
-  }, [enableAutoBackup, backupInterval]);
-  
-  // Atualizar intervalo de backup
-  useEffect(() => {
-    localStorage.setItem('loanbuddy_auto_backup_interval', backupInterval);
-  }, [backupInterval]);
 
   // Set up form with default values
   const form = useForm<SettingsFormValues>({
