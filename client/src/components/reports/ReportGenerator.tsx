@@ -419,8 +419,7 @@ const ReportGenerator = () => {
         </Tabs>
       </div>
 
-      {/* @ts-ignore - estilo para impressão */}
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           @page { size: landscape; }
           body * { visibility: hidden; }
@@ -432,7 +431,7 @@ const ReportGenerator = () => {
           .print\\:my-6 { margin-top: 1.5rem !important; margin-bottom: 1.5rem !important; }
           .print\\:mb-6 { margin-bottom: 1.5rem !important; }
         }
-      `}</style>
+      `}} />
     </div>
   );
 };
