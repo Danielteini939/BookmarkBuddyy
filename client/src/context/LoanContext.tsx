@@ -469,16 +469,25 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
         const nextPaymentDay = new Date(nextPaymentDate);
         nextPaymentDay.setHours(0, 0, 0, 0);
         
-        // IMPORTANTE: Modificado para incluir pagamentos do dia atual
-        // nextPaymentDay <= today significa que o pagamento é devido hoje ou já está atrasado
-        // Queremos exibir estes pagamentos também
+        // IMPORTANTE: Modificado para incluir pagamentos do dia atual e vencidos
+        // Verificar se o pagamento é para hoje (dia atual)
         const isToday = nextPaymentDay.getTime() === today.getTime();
-        const isUpcoming = nextPaymentDay > today && nextPaymentDay <= futureDate;
-        const isDue = nextPaymentDay <= today; // Devido hoje ou atrasado
         
-        // Retorna true se o pagamento for para hoje, estiver próximo, ou estiver atrasado (mas ainda não pago)
-        return !isNaN(nextPaymentDate.getTime()) && 
-               (isToday || isUpcoming || (isDue && loan.status !== 'paid'));
+        // Verificar se o pagamento está próximo (dentro do período de dias especificado)
+        const isUpcoming = nextPaymentDay > today && nextPaymentDay <= futureDate;
+        
+        // Verificar se o pagamento está vencido (antes ou igual ao dia atual)
+        const isDue = nextPaymentDay <= today;
+        
+        // CORREÇÃO IMPORTANTE: Garantir que empréstimos com status 'overdue' ou no dia
+        // atual sempre apareçam, mesmo se nextPaymentDate for igual a today
+        const shouldShow = isToday || // É hoje
+                           isUpcoming || // Está dentro do período futuro especificado
+                           (isDue && loan.status !== 'paid') || // Está vencido e não foi pago
+                           loan.status === 'overdue'; // Está marcado como vencido
+        
+        // Retorna true se a data for válida e algum dos critérios acima for atendido
+        return !isNaN(nextPaymentDate.getTime()) && shouldShow;
       } catch (error) {
         console.warn('Erro ao analisar paymentSchedule para o empréstimo ' + loan.id + ':', error);
         return false;
