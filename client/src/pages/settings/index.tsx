@@ -26,18 +26,12 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Download, Upload, Save, InfoCircle, AlertCircle } from "lucide-react";
+import { Download, Upload, Save, AlertCircle, Trash } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
 import { downloadCSV } from "@/utils/csvHelpers";
-import { 
-  createBackup, 
-  downloadBackup, 
-  validateBackup,
-  BackupData 
-} from "@/utils/backupHelpers";
+import { createBackup, downloadBackup, validateBackup, BackupData } from "@/utils/backupHelpers";
 
 // Form schema
 const settingsFormSchema = z.object({
@@ -49,13 +43,12 @@ const settingsFormSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof settingsFormSchema>;
 
-export default function SettingsPage() {
+export default function Settings() {
   const { settings, updateSettings, exportData, importData, borrowers, loans, payments } = useLoan();
   const { toast } = useToast();
   
-  // Estado para importação/exportação
+  // Estado para backup/importação
   const [isCreatingBackup, setIsCreatingBackup] = useState<boolean>(false);
-  const [backupDescription, setBackupDescription] = useState<string>("");
   const fileInputJsonRef = useRef<HTMLInputElement>(null);
   const fileInputCsvRef = useRef<HTMLInputElement>(null);
   
@@ -64,7 +57,7 @@ export default function SettingsPage() {
     console.log("Sistema operando sem persistência de dados. Dados existem apenas em memória.");
   }, []);
 
-  // Form setup with default values
+  // Set up form with default values
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsFormSchema),
     defaultValues: {
@@ -75,17 +68,16 @@ export default function SettingsPage() {
     },
   });
 
-  // Função para salvar as configurações
-  const onSubmit = (data: SettingsFormValues) => {
+  function onSubmit(data: SettingsFormValues) {
     updateSettings(data);
     toast({
-      title: "Configurações salvas",
-      description: "As configurações foram atualizadas com sucesso."
+      title: "Configurações Atualizadas",
+      description: "Suas configurações foram salvas com sucesso."
     });
-  };
+  }
   
-  // Função para exportar em CSV
-  const handleExportCsv = () => {
+  // Handler para exportar backup em CSV
+  function handleExportCsv() {
     const csvData = exportData();
     const date = new Date().toISOString().split('T')[0];
     downloadCSV(csvData, `loanbuddy_export_${date}.csv`);
@@ -94,10 +86,10 @@ export default function SettingsPage() {
       title: "Dados exportados",
       description: "Os dados foram exportados com sucesso em formato CSV."
     });
-  };
+  }
   
-  // Função para exportar backup em JSON
-  const handleExportJson = () => {
+  // Handler para exportar backup em JSON
+  function handleExportJson() {
     setIsCreatingBackup(true);
     
     try {
@@ -106,7 +98,7 @@ export default function SettingsPage() {
         loans, 
         payments, 
         settings,
-        backupDescription || `Backup manual - ${new Date().toLocaleString()}`
+        `Backup manual - ${new Date().toLocaleString()}`
       );
       
       downloadBackup(backupData);
@@ -124,12 +116,11 @@ export default function SettingsPage() {
       });
     } finally {
       setIsCreatingBackup(false);
-      setBackupDescription("");
     }
-  };
+  }
   
-  // Função para restaurar a partir de CSV
-  const handleImportCsv = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handler para importação de CSV
+  function handleImportCsv(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
     
@@ -147,7 +138,7 @@ export default function SettingsPage() {
           
           // Limpar o input
           if (fileInputCsvRef.current) {
-            fileInputCsvRef.current.value = '';
+            fileInputCsvRef.current.value = "";
           }
         } catch (error) {
           console.error("Erro na importação:", error);
@@ -160,10 +151,10 @@ export default function SettingsPage() {
       }
     };
     reader.readAsText(file);
-  };
+  }
   
-  // Função para restaurar a partir de JSON
-  const handleImportJson = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handler para importação de JSON
+  function handleImportJson(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
     
@@ -178,8 +169,8 @@ export default function SettingsPage() {
         
         if (!validation.valid) {
           toast({
-            title: "Erro de validação",
-            description: `O arquivo de backup é inválido: ${validation.errors.join(", ")}`,
+            title: "Erro na importação",
+            description: `Backup inválido: ${validation.errors.join(", ")}`,
             variant: "destructive"
           });
           return;
@@ -202,7 +193,7 @@ export default function SettingsPage() {
         
         // Limpar o input
         if (fileInputJsonRef.current) {
-          fileInputJsonRef.current.value = '';
+          fileInputJsonRef.current.value = "";
         }
       } catch (error) {
         console.error("Erro ao processar arquivo JSON:", error);
@@ -214,18 +205,18 @@ export default function SettingsPage() {
       }
     };
     reader.readAsText(file);
-  };
+  }
   
-  // Função para reiniciar dados
-  const handleReset = () => {
-    if (window.confirm('Você tem certeza? Todos os dados serão perdidos!')) {
+  // Handler para limpar todos os dados
+  function handleResetData() {
+    if (window.confirm('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita!')) {
       importData('RESET');
       toast({
         title: "Dados reiniciados",
-        description: "Todos os dados foram limpos e restaurados para os valores iniciais."
+        description: "Todos os dados foram removidos e as configurações padrão foram restauradas."
       });
     }
-  };
+  }
   
   return (
     <div>
@@ -259,7 +250,7 @@ export default function SettingsPage() {
                           <Input
                             type="number"
                             step="0.01"
-                            placeholder="5.00"
+                            min="0"
                             {...field}
                           />
                         </FormControl>
@@ -273,17 +264,31 @@ export default function SettingsPage() {
                   
                   <FormField
                     control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Moeda</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Símbolo da moeda usado em todo o sistema (ex: R$, $, €)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
                     name="defaultPaymentFrequency"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Frequência de Pagamento Padrão</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecione a frequência padrão" />
+                              <SelectValue placeholder="Selecione a frequência" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -325,27 +330,7 @@ export default function SettingsPage() {
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="currency"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Moeda</FormLabel>
-                        <FormControl>
-                          <Input placeholder="R$" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Símbolo da moeda a ser exibido nos valores monetários
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button type="submit" className="w-full">
-                    <Save className="h-4 w-4 mr-2" />
-                    Salvar Configurações
-                  </Button>
+                  <Button type="submit">Salvar Configurações</Button>
                 </form>
               </Form>
             </CardContent>
@@ -368,9 +353,9 @@ export default function SettingsPage() {
                 </p>
                 <Button 
                   variant="destructive"
-                  onClick={handleReset}
+                  onClick={handleResetData}
                 >
-                  <AlertCircle className="mr-2 h-4 w-4" />
+                  <Trash className="mr-2 h-4 w-4" />
                   Reiniciar Dados
                 </Button>
               </div>
@@ -397,63 +382,70 @@ export default function SettingsPage() {
                 </AlertDescription>
               </Alert>
               
-              {/* Exportação e Importação */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Exportar e Importar</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Exportar dados</h4>
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="default" onClick={handleExportJson}>
-                        <Download className="h-4 w-4 mr-2" />
-                        Exportar JSON
-                      </Button>
-                      
-                      <Button variant="outline" onClick={handleExportCsv}>
-                        <Download className="h-4 w-4 mr-2" />
-                        Exportar CSV
-                      </Button>
-                    </div>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Exportar Dados</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <Button 
+                      onClick={handleExportJson}
+                      variant="default"
+                      disabled={isCreatingBackup}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Exportar JSON
+                    </Button>
                     
-                    <p className="text-sm text-slate-500 mt-2">
-                      O formato JSON preserva todos os dados, incluindo configurações.
-                      O formato CSV é compatível com planilhas.
-                    </p>
+                    <Button 
+                      onClick={handleExportCsv}
+                      variant="outline"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Exportar CSV
+                    </Button>
                   </div>
                   
-                  <Separator />
-                  
-                  <div>
-                    <h4 className="font-medium mb-2">Importar dados</h4>
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                      <div>
-                        <Label htmlFor="file-json" className="block mb-1">Arquivo JSON:</Label>
-                        <Input 
-                          id="file-json" 
-                          type="file" 
-                          accept=".json"
+                  <p className="text-sm text-slate-500 mt-2">
+                    O formato JSON preserva todos os dados e é recomendado para backups completos.
+                    O formato CSV é útil para exportar dados para outros programas.
+                  </p>
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Importar Dados</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="json-import">Arquivo JSON:</Label>
+                      <div className="flex mt-1 gap-2">
+                        <Input
+                          id="json-import"
+                          type="file"
                           ref={fileInputJsonRef}
+                          accept=".json"
                           onChange={handleImportJson}
                         />
                       </div>
-                      
-                      <div>
-                        <Label htmlFor="file-csv" className="block mb-1">Arquivo CSV:</Label>
-                        <Input 
-                          id="file-csv" 
-                          type="file" 
-                          accept=".csv"
+                      <p className="text-xs text-slate-500 mt-1">
+                        Formato JSON preserva todas as configurações e dados
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="csv-import">Arquivo CSV:</Label>
+                      <div className="flex mt-1 gap-2">
+                        <Input
+                          id="csv-import"
+                          type="file"
                           ref={fileInputCsvRef}
+                          accept=".csv"
                           onChange={handleImportCsv}
                         />
                       </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Formato CSV é compatível com planilhas
+                      </p>
                     </div>
-                    
-                    <p className="text-sm text-slate-500 mt-2">
-                      Importe um backup JSON ou CSV para recuperar seus dados. Esta é a única maneira de preservar
-                      seus dados entre sessões no modo sem cookies.
-                    </p>
                   </div>
                 </div>
               </div>
