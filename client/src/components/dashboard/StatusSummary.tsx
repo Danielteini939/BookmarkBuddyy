@@ -1,55 +1,79 @@
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useLoan } from "@/context/LoanContext";
-import { getStatusColor, getStatusName } from "@/utils/formatters";
-import { LoanStatus } from "@/types";
 
 export default function StatusSummary() {
   const { getDashboardMetrics } = useLoan();
   const metrics = getDashboardMetrics();
   
-  // Array com todos os status possíveis
-  const allStatuses: LoanStatus[] = ['active', 'paid', 'overdue', 'defaulted'];
+  const totalLoans = 
+    metrics.activeLoanCount + 
+    metrics.paidLoanCount + 
+    metrics.overdueLoanCount + 
+    metrics.defaultedLoanCount;
   
-  // Obter contagem de cada status
-  const statusCounts = {
-    active: metrics.activeLoanCount,
-    paid: metrics.paidLoanCount,
-    overdue: metrics.overdueLoanCount,
-    defaulted: metrics.defaultedLoanCount
+  const getPercentage = (count: number) => {
+    return totalLoans > 0 ? (count / totalLoans) * 100 : 0;
   };
   
-  // Total de empréstimos
-  const totalLoans = Object.values(statusCounts).reduce((a, b) => a + b, 0);
-  
-  // Se não houver empréstimos, mostrar mensagem
-  if (totalLoans === 0) {
-    return (
-      <div className="h-full flex items-center justify-center text-muted-foreground">
-        Nenhum empréstimo cadastrado
-      </div>
-    );
-  }
-  
   return (
-    <div className="space-y-6">
-      {/* Resumo com números */}
-      <div className="grid grid-cols-2 gap-4">
-        {allStatuses.map(status => {
-          const count = statusCounts[status];
-          const percentage = totalLoans ? Math.round((count / totalLoans) * 100) : 0;
-          const { bgColor, textColor } = getStatusColor(status);
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold">Distribuição de Empréstimos</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <StatusItem 
+            label="Ativos" 
+            count={metrics.activeLoanCount} 
+            percentage={getPercentage(metrics.activeLoanCount)} 
+            color="bg-blue-500" 
+          />
           
-          return (
-            <div key={status} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-sm font-medium ${textColor}`}>{getStatusName(status)}</span>
-                <span className={`text-xs ${textColor} px-2 py-1 rounded-full ${bgColor}`}>
-                  {percentage}%
-                </span>
-              </div>
-              <p className="text-2xl font-bold">{count}</p>
-            </div>
-          );
-        })}
+          <StatusItem 
+            label="Pagos" 
+            count={metrics.paidLoanCount} 
+            percentage={getPercentage(metrics.paidLoanCount)} 
+            color="bg-green-500" 
+          />
+          
+          <StatusItem 
+            label="Vencidos" 
+            count={metrics.overdueLoanCount} 
+            percentage={getPercentage(metrics.overdueLoanCount)} 
+            color="bg-amber-500" 
+          />
+          
+          <StatusItem 
+            label="Inadimplentes" 
+            count={metrics.defaultedLoanCount} 
+            percentage={getPercentage(metrics.defaultedLoanCount)} 
+            color="bg-red-500" 
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface StatusItemProps {
+  label: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+function StatusItem({ label, count, percentage, color }: StatusItemProps) {
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-sm font-medium text-slate-600">{label}</span>
+        <span className="text-sm font-medium text-slate-900">{count}</span>
+      </div>
+      <div className="w-full bg-slate-200 rounded-full h-2">
+        <div 
+          className={`${color} h-2 rounded-full`} 
+          style={{ width: `${percentage}%` }}
+        ></div>
       </div>
     </div>
   );

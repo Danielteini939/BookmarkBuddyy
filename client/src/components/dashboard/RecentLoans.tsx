@@ -1,95 +1,67 @@
 import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus } from "lucide-react";
+import StatusBadge from "@/components/shared/StatusBadge";
 import { useLoan } from "@/context/LoanContext";
 import { formatCurrency, formatDate } from "@/utils/formatters";
-import { cn } from "@/lib/utils";
 
 export default function RecentLoans() {
-  const { loans, borrowers } = useLoan();
+  const { loans } = useLoan();
   
-  // Ordenar empréstimos do mais recente para o mais antigo (baseado na data de emissão)
-  const sortedLoans = [...loans].sort((a, b) => {
-    return new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime();
-  });
-  
-  // Pegar apenas os 5 mais recentes
-  const recentLoans = sortedLoans.slice(0, 5);
+  // Sort loans by issue date (newest first) and take 5
+  const recentLoans = [...loans]
+    .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime())
+    .slice(0, 5);
   
   return (
-    <Card className="card-premium">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <CardTitle>Empréstimos Recentes</CardTitle>
-          <Button asChild size="sm" variant="ghost">
-            <Link href="/loans">
-              <Eye className="h-4 w-4 mr-1" />
-              Ver todos
-            </Link>
+    <Card>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-semibold">Empréstimos Recentes</CardTitle>
+        <Link href="/loans">
+          <Button variant="link" className="text-primary">
+            Ver todos
           </Button>
-        </div>
+        </Link>
       </CardHeader>
       <CardContent>
-        {recentLoans.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>Nenhum empréstimo cadastrado</p>
-            <Button asChild className="mt-4" variant="outline">
-              <Link href="/loans/new">
-                <Plus className="h-4 w-4 mr-1" />
-                Novo Empréstimo
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {recentLoans.map(loan => {
-              let statusColor = "bg-slate-100 text-slate-700";
-              
-              switch(loan.status) {
-                case 'active':
-                  statusColor = "bg-green-100 text-green-700";
-                  break;
-                case 'paid':
-                  statusColor = "bg-blue-100 text-blue-700";
-                  break;
-                case 'overdue':
-                  statusColor = "bg-amber-100 text-amber-700";
-                  break;
-                case 'defaulted':
-                  statusColor = "bg-red-100 text-red-700";
-                  break;
-              }
-              
-              return (
-                <div key={loan.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-medium">{loan.borrowerName}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatCurrency(loan.principal)} • {formatDate(loan.issueDate)}
-                      </div>
-                    </div>
-                    <div className={cn("px-2 py-1 rounded-full text-xs font-medium", statusColor)}>
-                      {loan.status === 'active' ? 'Ativo' : 
-                       loan.status === 'paid' ? 'Pago' :
-                       loan.status === 'overdue' ? 'Em Atraso' : 
-                       'Inadimplente'}
-                    </div>
-                  </div>
-                  <div className="mt-2 flex justify-end">
-                    <Button asChild size="sm" variant="ghost">
-                      <Link href={`/loans/${loan.id}`}>
-                        <Eye className="h-3 w-3 mr-1" />
-                        Detalhes
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-slate-50">
+              <TableRow>
+                <TableHead className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Mutuário</TableHead>
+                <TableHead className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</TableHead>
+                <TableHead className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</TableHead>
+                <TableHead className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Data Venc.</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recentLoans.map((loan) => (
+                <TableRow key={loan.id}>
+                  <TableCell className="px-3 py-2 whitespace-nowrap text-sm font-medium text-slate-900">
+                    {loan.borrowerName}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 whitespace-nowrap text-sm text-slate-700">
+                    {formatCurrency(loan.principal)}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 whitespace-nowrap">
+                    <StatusBadge status={loan.status} />
+                  </TableCell>
+                  <TableCell className="px-3 py-2 whitespace-nowrap text-sm text-slate-700">
+                    {formatDate(loan.dueDate)}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {recentLoans.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-4 text-slate-500">
+                    Nenhum empréstimo recente encontrado
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
