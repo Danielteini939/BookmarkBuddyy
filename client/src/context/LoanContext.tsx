@@ -506,110 +506,283 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   
   // Import/Export
   const importData = (data: string) => {
-    try {
-      // Verifica se é JSON ou CSV
-      let importedBorrowers: BorrowerType[] = [];
-      let importedLoans: LoanType[] = [];
-      let importedPayments: PaymentType[] = [];
-      
-      // Tenta analisar como JSON primeiro
-      try {
-        const jsonData = JSON.parse(data);
+    // Importar utilitários de log
+    import('@/utils/logUtils').then(({
+      logOperationStart,
+      logOperationSuccess,
+      logOperationError,
+      logSection,
+      logSuccess,
+      logWarning,
+      logInfo,
+      logError,
+      logImportExportStats,
+      logDataValidation
+    }) => {
+      // Verificar se é um reset
+      if (data === 'RESET') {
+        logOperationStart('RESET DE DADOS');
+        logInfo('Reiniciando dados para valores padrão');
         
-        // Verifica se o JSON contém as estruturas esperadas
-        if (Array.isArray(jsonData.borrowers) && 
-            Array.isArray(jsonData.loans) && 
-            Array.isArray(jsonData.payments)) {
+        const defaultSettings = {
+          defaultInterestRate: 5,
+          defaultPaymentFrequency: "monthly" as const,
+          defaultInstallments: 12,
+          currency: "R$"
+        };
+        
+        setBorrowers([...mockBorrowers]);
+        setLoans([...mockLoans]);
+        setPayments([...mockPayments]);
+        setSettings(defaultSettings);
+        
+        // Salvar em memória (não em localStorage)
+        saveBorrowers([...mockBorrowers]);
+        saveLoans([...mockLoans]);
+        savePayments([...mockPayments]);
+        saveSettings(defaultSettings);
+        
+        logSuccess('Dados reiniciados com sucesso');
+        logOperationSuccess('RESET DE DADOS', {
+          Mutuários: mockBorrowers.length,
+          Empréstimos: mockLoans.length,
+          Pagamentos: mockPayments.length
+        });
+        
+        toast({
+          title: "Dados reiniciados",
+          description: "Todos os dados foram redefinidos para os valores padrão"
+        });
+        
+        return;
+      }
+      
+      try {
+        logOperationStart('IMPORTAÇÃO DE DADOS');
+        
+        // Variáveis para armazenar os dados importados
+        let importedBorrowers: BorrowerType[] = [];
+        let importedLoans: LoanType[] = [];
+        let importedPayments: PaymentType[] = [];
+        let importFormat = 'desconhecido';
+        
+        // Tenta analisar como JSON primeiro
+        try {
+          logInfo('Tentando analisar como JSON');
+          const jsonData = JSON.parse(data);
+          importFormat = 'JSON';
           
-          importedBorrowers = jsonData.borrowers;
-          importedLoans = jsonData.loans;
-          importedPayments = jsonData.payments;
+          // Verifica se o JSON contém as estruturas esperadas
+          if (Array.isArray(jsonData.borrowers) && 
+              Array.isArray(jsonData.loans) && 
+              Array.isArray(jsonData.payments)) {
+            
+            importedBorrowers = jsonData.borrowers;
+            importedLoans = jsonData.loans;
+            importedPayments = jsonData.payments;
+            
+            // Registra detalhes de cada tipo
+            logSuccess(`Mutuários encontrados: ${importedBorrowers.length}`);
+            logSuccess(`Empréstimos encontrados: ${importedLoans.length}`);
+            logSuccess(`Pagamentos encontrados: ${importedPayments.length}`);
+            
+            // Validação básica de estrutura
+            logSection('VALIDAÇÃO DE ESTRUTURA');
+            
+            // Verificar estrutura dos mutuários
+            const invalidBorrowers = importedBorrowers.filter(b => !b.id || !b.name);
+            if (invalidBorrowers.length > 0) {
+              logWarning(`${invalidBorrowers.length} mutuários com estrutura incompleta`, 
+                invalidBorrowers.map(b => ({ id: b.id, nome: b.name })));
+            } else {
+              logSuccess('Todos os mutuários têm estrutura válida');
+            }
+            
+            // Verificar estrutura dos empréstimos e consertar paymentSchedule se for string
+            let scheduleFixCount = 0;
+            importedLoans.forEach(loan => {
+              if (loan.paymentSchedule && typeof loan.paymentSchedule === 'string') {
+                try {
+                  loan.paymentSchedule = JSON.parse(loan.paymentSchedule as any);
+                  scheduleFixCount++;
+                } catch (e) {
+                  logWarning(`Erro ao analisar paymentSchedule do empréstimo ${loan.id}`, e);
+                }
+              }
+            });
+            
+            if (scheduleFixCount > 0) {
+              logInfo(`${scheduleFixCount} objetos paymentSchedule foram convertidos de string para objeto`);
+            }
+            
+            // Verificar estrutura dos empréstimos
+            const invalidLoansStructure = importedLoans.filter(
+              l => !l.id || !l.borrowerId || l.principal === undefined || l.principal === null
+            );
+            if (invalidLoansStructure.length > 0) {
+              logWarning(`${invalidLoansStructure.length} empréstimos com estrutura incompleta`, 
+                invalidLoansStructure.map(l => ({ id: l.id, borrowerId: l.borrowerId })));
+            } else {
+              logSuccess('Todos os empréstimos têm estrutura válida');
+            }
+            
+            // Verificar estrutura dos pagamentos
+            const invalidPaymentsStructure = importedPayments.filter(
+              p => !p.id || !p.loanId || p.amount === undefined || p.amount === null
+            );
+            if (invalidPaymentsStructure.length > 0) {
+              logWarning(`${invalidPaymentsStructure.length} pagamentos com estrutura incompleta`, 
+                invalidPaymentsStructure.map(p => ({ id: p.id, loanId: p.loanId })));
+            } else {
+              logSuccess('Todos os pagamentos têm estrutura válida');
+            }
+            
+            logImportExportStats({
+              format: 'JSON',
+              borrowers: importedBorrowers.length,
+              loans: importedLoans.length,
+              payments: importedPayments.length
+            });
+          } else {
+            throw new Error("Estrutura de dados JSON inválida");
+          }
+        } catch (jsonError) {
+          // Se falhar como JSON, tenta como CSV
+          logWarning('Não é um JSON válido, tentando CSV...');
+          importFormat = 'CSV';
           
-          console.log("Dados importados de JSON:", {
+          // Verificar se o CSV contém as seções necessárias
+          if (!data.includes('[BORROWERS]') || 
+              !data.includes('[LOANS]') || 
+              !data.includes('[PAYMENTS]')) {
+            throw new Error("O arquivo CSV não contém as seções necessárias: [BORROWERS], [LOANS], [PAYMENTS]");
+          }
+          
+          const parsed = parseCSV(data);
+          importedBorrowers = parsed.importedBorrowers;
+          importedLoans = parsed.importedLoans;
+          importedPayments = parsed.importedPayments;
+          
+          logSuccess(`Mutuários encontrados no CSV: ${importedBorrowers.length}`);
+          logSuccess(`Empréstimos encontrados no CSV: ${importedLoans.length}`);
+          logSuccess(`Pagamentos encontrados no CSV: ${importedPayments.length}`);
+          
+          logImportExportStats({
+            format: 'CSV',
             borrowers: importedBorrowers.length,
             loans: importedLoans.length,
             payments: importedPayments.length
           });
-        } else {
-          throw new Error("Estrutura de dados JSON inválida");
-        }
-      } catch (jsonError) {
-        // Se falhar como JSON, tenta como CSV
-        console.log("Não é um JSON válido, tentando CSV...");
-        
-        // Verificar se o CSV contém as seções necessárias
-        if (!data.includes('[BORROWERS]') || 
-            !data.includes('[LOANS]') || 
-            !data.includes('[PAYMENTS]')) {
-          throw new Error("O arquivo CSV não contém as seções necessárias: [BORROWERS], [LOANS], [PAYMENTS]");
         }
         
-        const parsed = parseCSV(data);
-        importedBorrowers = parsed.importedBorrowers;
-        importedLoans = parsed.importedLoans;
-        importedPayments = parsed.importedPayments;
+        // Validar relacionamentos entre entidades
+        const borrowerIds = new Set(importedBorrowers.map(b => b.id));
         
-        console.log("Dados importados de CSV:", {
-          borrowers: importedBorrowers.length,
-          loans: importedLoans.length,
-          payments: importedPayments.length
+        // Verificar se todos os empréstimos referenciam mutuários existentes
+        const invalidLoans = importedLoans.filter(loan => !borrowerIds.has(loan.borrowerId));
+        
+        // Verificar se todos os pagamentos referenciam empréstimos existentes
+        const loanIds = new Set(importedLoans.map(l => l.id));
+        const invalidPayments = importedPayments.filter(payment => !loanIds.has(payment.loanId));
+        
+        // Exibir validação de dados
+        logDataValidation({
+          borrowerIds: borrowerIds.size,
+          loanIds: loanIds.size,
+          invalidLoans: invalidLoans.map(loan => ({ id: loan.id, borrowerId: loan.borrowerId })),
+          invalidPayments: invalidPayments.map(payment => ({ id: payment.id, loanId: payment.loanId }))
         });
+        
+        // Atualizar o estado com os dados importados
+        logSection('SALVANDO DADOS');
+        logInfo('Atualizando estado da aplicação');
+        
+        setBorrowers(importedBorrowers);
+        setLoans(importedLoans);
+        setPayments(importedPayments);
+        
+        // Salvar em memória (não em localStorage)
+        logInfo('Salvando dados em memória');
+        saveBorrowers(importedBorrowers);
+        saveLoans(importedLoans);
+        savePayments(importedPayments);
+        
+        // Estatísticas para o log final
+        const stats = {
+          Formato: importFormat,
+          Mutuários: importedBorrowers.length,
+          Empréstimos: importedLoans.length,
+          Pagamentos: importedPayments.length,
+          'Empréstimos inválidos': invalidLoans.length,
+          'Pagamentos inválidos': invalidPayments.length
+        };
+        
+        logOperationSuccess('IMPORTAÇÃO DE DADOS', stats);
+        
+        // Notificação para o usuário
+        toast({
+          title: "Dados importados",
+          description: `Importado com sucesso: ${importedBorrowers.length} mutuários, ${importedLoans.length} empréstimos, ${importedPayments.length} pagamentos.`
+        });
+      } catch (error) {
+        logOperationError('IMPORTAÇÃO DE DADOS', error);
+        
+        // Mensagem de erro mais específica
+        let errorMessage = "Falha ao importar dados. Verifique o formato do arquivo.";
+        
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        
+        toast({
+          title: "Erro na importação",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        
+        // Re-lançar o erro para que o chamador possa lidar com ele, se necessário
+        throw error;
       }
-      
-      // Validar relacionamentos entre entidades
-      const borrowerIds = new Set(importedBorrowers.map(b => b.id));
-      
-      // Verificar se todos os empréstimos referenciam mutuários existentes
-      const invalidLoans = importedLoans.filter(loan => !borrowerIds.has(loan.borrowerId));
-      if (invalidLoans.length > 0) {
-        console.warn(`${invalidLoans.length} empréstimos referenciam mutuários inexistentes.`);
-      }
-      
-      // Verificar se todos os pagamentos referenciam empréstimos existentes
-      const loanIds = new Set(importedLoans.map(l => l.id));
-      const invalidPayments = importedPayments.filter(payment => !loanIds.has(payment.loanId));
-      if (invalidPayments.length > 0) {
-        console.warn(`${invalidPayments.length} pagamentos referenciam empréstimos inexistentes.`);
-      }
-      
-      // Atualizar o estado com os dados importados
-      setBorrowers(importedBorrowers);
-      setLoans(importedLoans);
-      setPayments(importedPayments);
-      
-      // Salvar no localStorage
-      saveBorrowers(importedBorrowers);
-      saveLoans(importedLoans);
-      savePayments(importedPayments);
-      
-      toast({
-        title: "Dados importados",
-        description: "Importado com sucesso: " + importedBorrowers.length + " mutuários, " + 
-                    importedLoans.length + " empréstimos, " + 
-                    importedPayments.length + " pagamentos."
-      });
-    } catch (error) {
-      console.error("Erro ao importar dados:", error);
-      
-      // Mensagem de erro mais específica
-      let errorMessage = "Falha ao importar dados. Verifique o formato do arquivo.";
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
-      toast({
-        title: "Erro na importação",
-        description: errorMessage,
-        variant: "destructive"
-      });
-      
-      // Re-lançar o erro para que o chamador possa lidar com ele, se necessário
-      throw error;
-    }
+    });
   };
   
   const exportData = () => {
+    // Importar utilitários de log
+    import('@/utils/logUtils').then(({
+      logOperationStart,
+      logOperationSuccess,
+      logSection,
+      logInfo
+    }) => {
+      logOperationStart('EXPORTAÇÃO DE DADOS');
+      logInfo('Iniciando exportação para CSV');
+      
+      logSection('ESTATÍSTICAS DOS DADOS');
+      
+      // Exibir estatísticas dos dados sendo exportados
+      console.table({
+        "Mutuários": borrowers.length,
+        "Empréstimos": loans.length,
+        "Pagamentos": payments.length,
+        "Total de registros": borrowers.length + loans.length + payments.length
+      });
+      
+      // Exibir informações sobre status dos empréstimos
+      const loanStatuses = loans.reduce((acc, loan) => {
+        acc[loan.status] = (acc[loan.status] || 0) + 1;
+        return acc;
+      }, {} as Record<LoanStatus, number>);
+      
+      logInfo('Distribuição de status dos empréstimos');
+      console.table(loanStatuses);
+      
+      logOperationSuccess('EXPORTAÇÃO DE DADOS', {
+        Mutuários: borrowers.length,
+        Empréstimos: loans.length,
+        Pagamentos: payments.length
+      });
+    });
+    
     return generateCSV(borrowers, loans, payments);
   };
   
