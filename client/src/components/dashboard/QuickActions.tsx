@@ -1,62 +1,72 @@
 import { Link } from "wouter";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, BanknoteIcon, UserPlus, FileBarChart2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  CalendarPlus, 
+  Users, 
+  FilePlus, 
+  BarChart3,
+  FileText,
+  Download,
+  Upload
+} from "lucide-react";
 
 export default function QuickActions() {
   const actions = [
     {
-      title: "Novo Empréstimo",
+      icon: FilePlus,
+      label: "Novo Empréstimo",
       href: "/loans/new",
-      icon: <Plus className="h-6 w-6" />,
-      bgColor: "bg-primary-50 hover:bg-primary-100",
-      iconBgColor: "bg-primary-100",
-      iconColor: "text-primary",
+      color: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
     },
     {
-      title: "Registrar Pagamento",
-      href: "/payments",
-      icon: <BanknoteIcon className="h-6 w-6" />,
-      bgColor: "bg-emerald-50 hover:bg-emerald-100",
-      iconBgColor: "bg-emerald-100",
-      iconColor: "text-emerald-600",
-    },
-    {
-      title: "Novo Mutuário",
+      icon: Users,
+      label: "Novo Mutuário",
       href: "/borrowers/new",
-      icon: <UserPlus className="h-6 w-6" />,
-      bgColor: "bg-indigo-50 hover:bg-indigo-100",
-      iconBgColor: "bg-indigo-100",
-      iconColor: "text-indigo-600",
+      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
     },
     {
-      title: "Gerar Relatório",
+      icon: CalendarPlus,
+      label: "Registrar Pagamento",
+      href: "/payments",
+      color: "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
+    },
+    {
+      icon: BarChart3,
+      label: "Relatórios",
       href: "/reports",
-      icon: <FileBarChart2 className="h-6 w-6" />,
-      bgColor: "bg-amber-50 hover:bg-amber-100",
-      iconBgColor: "bg-amber-100",
-      iconColor: "text-amber-600",
+      color: "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+    },
+    {
+      icon: Download,
+      label: "Exportar Dados",
+      href: "/settings",
+      color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400"
+    },
+    {
+      icon: Upload,
+      label: "Importar Dados",
+      href: "/settings",
+      color: "bg-rose-100 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400"
     },
   ];
-
+  
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">Ações Rápidas</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {actions.map((action) => (
-            <Link key={action.title} href={action.href}>
-              <div className={`flex flex-col items-center p-4 rounded-lg transition-colors ${action.bgColor} cursor-pointer`}>
-                <div className={`h-10 w-10 rounded-full ${action.iconBgColor} flex items-center justify-center ${action.iconColor} mb-3`}>
-                  {action.icon}
-                </div>
-                <span className="text-sm font-medium text-slate-900">{action.title}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {actions.map((action, index) => (
+        <Button
+          key={index}
+          asChild
+          variant="ghost"
+          className="h-auto flex-col gap-2 p-4 justify-start items-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <Link href={action.href}>
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center ${action.color}`}>
+              <action.icon className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium">{action.label}</span>
+          </Link>
+        </Button>
+      ))}
+    </div>
   );
 }
