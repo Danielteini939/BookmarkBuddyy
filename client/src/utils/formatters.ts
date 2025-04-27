@@ -1,15 +1,16 @@
-import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { LoanStatus } from "@/types";
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { LoanStatus } from '@/types';
 
 /**
  * Format a date string to Brazilian format (dd/MM/yyyy)
  */
 export function formatDate(dateString: string): string {
   try {
-    const date = parseISO(dateString);
+    const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
     return format(date, 'dd/MM/yyyy', { locale: ptBR });
   } catch (error) {
+    console.error("Erro ao formatar data:", error);
     return dateString;
   }
 }
@@ -21,6 +22,7 @@ export function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
+    minimumFractionDigits: 2,
   }).format(value);
 }
 
@@ -39,34 +41,40 @@ export function formatPercentage(value: number): string {
  * Get the color for a loan status
  */
 export function getStatusColor(status: LoanStatus): {
-  textColor: string;
   bgColor: string;
+  textColor: string;
   borderColor: string;
 } {
   switch (status) {
     case 'active':
       return {
-        textColor: 'text-blue-800',
-        bgColor: 'bg-blue-100',
-        borderColor: 'border-blue-300',
+        bgColor: 'bg-green-100 dark:bg-green-900/20',
+        textColor: 'text-green-600 dark:text-green-400',
+        borderColor: 'border-green-200 dark:border-green-800',
       };
     case 'paid':
       return {
-        textColor: 'text-green-800',
-        bgColor: 'bg-green-100',
-        borderColor: 'border-green-300',
+        bgColor: 'bg-blue-100 dark:bg-blue-900/20',
+        textColor: 'text-blue-600 dark:text-blue-400',
+        borderColor: 'border-blue-200 dark:border-blue-800',
       };
     case 'overdue':
       return {
-        textColor: 'text-amber-800',
-        bgColor: 'bg-amber-100',
-        borderColor: 'border-amber-300',
+        bgColor: 'bg-amber-100 dark:bg-amber-900/20',
+        textColor: 'text-amber-600 dark:text-amber-400',
+        borderColor: 'border-amber-200 dark:border-amber-800',
       };
     case 'defaulted':
       return {
-        textColor: 'text-red-800',
-        bgColor: 'bg-red-100',
-        borderColor: 'border-red-300',
+        bgColor: 'bg-red-100 dark:bg-red-900/20',
+        textColor: 'text-red-600 dark:text-red-400',
+        borderColor: 'border-red-200 dark:border-red-800',
+      };
+    default:
+      return {
+        bgColor: 'bg-slate-100 dark:bg-slate-800',
+        textColor: 'text-slate-600 dark:text-slate-400',
+        borderColor: 'border-slate-200 dark:border-slate-700',
       };
   }
 }
@@ -81,8 +89,10 @@ export function getStatusName(status: LoanStatus): string {
     case 'paid':
       return 'Pago';
     case 'overdue':
-      return 'Vencido';
+      return 'Em Atraso';
     case 'defaulted':
       return 'Inadimplente';
+    default:
+      return status;
   }
 }

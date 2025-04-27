@@ -1,145 +1,64 @@
-import { useEffect, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useLoan } from "@/context/LoanContext";
+import { LoanType } from "@/types";
 
-// This component will use Chart.js for visualization
 export default function LoanStatusChart() {
-  const chartRef = useRef<HTMLCanvasElement>(null);
-  const chartInstanceRef = useRef<any>(null);
   const { loans } = useLoan();
-
-  useEffect(() => {
-    if (!chartRef.current) return;
-
-    // Import Chart.js dynamically to avoid SSR issues
-    const loadChart = async () => {
-      const Chart = (await import("chart.js/auto")).default;
-
-      // If a chart already exists, destroy it
-      if (chartInstanceRef.current) {
-        chartInstanceRef.current.destroy();
-      }
-
-      // Group loans by status and month
-      const today = new Date();
-      const months = [];
-      const activeData = [];
-      const paidData = [];
-      const overdueData = [];
-      const defaultedData = [];
-
-      // Generate last 11 months plus current month
-      for (let i = 10; i >= 0; i--) {
-        const month = new Date(today);
-        month.setMonth(today.getMonth() - i);
-        months.push(month.toLocaleString("pt-BR", { month: "short" }));
-      }
-      months.push(today.toLocaleString("pt-BR", { month: "short" }));
-
-      // Simply use mock data for the chart
-      activeData.push(5, 6, 8, 9, 10, 12, 13, 12, 11, 12, 12, 12);
-      paidData.push(2, 3, 3, 4, 4, 3, 4, 5, 5, 5, 5, 5);
-      overdueData.push(0, 1, 1, 2, 1, 2, 2, 3, 2, 3, 3, 3);
-      defaultedData.push(0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1);
-
-      const ctx = chartRef.current.getContext("2d");
-      if (!ctx) return;
-
-      chartInstanceRef.current = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: months,
-          datasets: [
-            {
-              label: "Ativos",
-              data: activeData,
-              borderColor: "#3b82f6",
-              backgroundColor: "rgba(59, 130, 246, 0.1)",
-              borderWidth: 2,
-              tension: 0.3,
-              fill: true,
-            },
-            {
-              label: "Pagos",
-              data: paidData,
-              borderColor: "#10b981",
-              backgroundColor: "rgba(16, 185, 129, 0.1)",
-              borderWidth: 2,
-              tension: 0.3,
-              fill: true,
-            },
-            {
-              label: "Vencidos",
-              data: overdueData,
-              borderColor: "#f59e0b",
-              backgroundColor: "rgba(245, 158, 11, 0.1)",
-              borderWidth: 2,
-              tension: 0.3,
-              fill: true,
-            },
-            {
-              label: "Inadimplentes",
-              data: defaultedData,
-              borderColor: "#ef4444",
-              backgroundColor: "rgba(239, 68, 68, 0.1)",
-              borderWidth: 2,
-              tension: 0.3,
-              fill: true,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "top",
-              labels: {
-                boxWidth: 12,
-                font: {
-                  size: 12,
-                },
-              },
-            },
-            tooltip: {
-              mode: "index",
-              intersect: false,
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                precision: 0,
-              },
-            },
-          },
-        },
-      });
-    };
-
-    loadChart();
-
-    // Clean up chart instance on unmount
-    return () => {
-      if (chartInstanceRef.current) {
-        chartInstanceRef.current.destroy();
-      }
-    };
-  }, [loans]);
-
+  
+  // Contagem de empréstimos por status
+  const activeLoans = loans.filter(loan => loan.status === 'active').length;
+  const paidLoans = loans.filter(loan => loan.status === 'paid').length;
+  const overdueLoans = loans.filter(loan => loan.status === 'overdue').length;
+  const defaultedLoans = loans.filter(loan => loan.status === 'defaulted').length;
+  
+  // Total para cálculo de porcentagens
+  const totalLoans = loans.length;
+  
+  // Função auxiliar para calcular a porcentagem
+  const getPercentage = (count: number) => {
+    if (totalLoans === 0) return 0;
+    return Math.round((count / totalLoans) * 100);
+  };
+  
+  // Dados para o gráfico
+  const statusData = [
+    { label: 'Ativos', count: activeLoans, color: 'bg-[hsl(175,80%,35%)]', percentage: getPercentage(activeLoans) },
+    { label: 'Pagos', count: paidLoans, color: 'bg-[hsl(165,75%,42%)]', percentage: getPercentage(paidLoans) },
+    { label: 'Em Atraso', count: overdueLoans, color: 'bg-[hsl(350,60%,50%)]', percentage: getPercentage(overdueLoans) },
+    { label: 'Inadimplentes', count: defaultedLoans, color: 'bg-[hsl(0,70%,50%)]', percentage: getPercentage(defaultedLoans) }
+  ];
+  
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">
-          Empréstimos por Status
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-64">
-          <canvas ref={chartRef}></canvas>
+    <div>
+      {totalLoans === 0 ? (
+        <div className="h-32 flex items-center justify-center text-muted-foreground">
+          Nenhum empréstimo cadastrado
         </div>
-      </CardContent>
-    </Card>
+      ) : (
+        <div className="space-y-4">
+          {/* Barras de porcentagem */}
+          <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex">
+            {statusData.map((status, index) => (
+              <div 
+                key={index} 
+                className={`${status.color} h-full transition-all duration-500 ease-in-out`}
+                style={{ width: `${status.percentage}%` }}
+                title={`${status.label}: ${status.percentage}%`}
+              />
+            ))}
+          </div>
+          
+          {/* Legenda */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {statusData.map((status, index) => (
+              <div key={index} className="flex items-center">
+                <div className={`w-3 h-3 rounded-full ${status.color} mr-2`} />
+                <span className="text-sm">{status.label}: {status.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

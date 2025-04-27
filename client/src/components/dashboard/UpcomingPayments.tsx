@@ -1,88 +1,113 @@
 import { Link } from "wouter";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CalendarPlus, Clock } from "lucide-react";
 import { useLoan } from "@/context/LoanContext";
 import { formatCurrency, formatDate } from "@/utils/formatters";
-import { parseISO, addDays, isBefore } from "date-fns";
+import { differenceInDays, parseISO } from "date-fns";
 
 export default function UpcomingPayments() {
-  const { getUpcomingDueLoans, getBorrowerById } = useLoan();
+  const { loans } = useLoan();
   
-  // Obter empréstimos com vencimento nos próximos 30 dias
-  const upcomingLoans = getUpcomingDueLoans(30);
+  // Apenas empréstimos ativos
+  const activeLoans = loans.filter(loan => loan.status === 'active');
   
-  // Preparar dados para exibição
-  const upcomingPayments = upcomingLoans
-    .filter(loan => loan.paymentSchedule) // garantir que tem programação de pagamento
-    .map(loan => {
-      const borrower = getBorrowerById(loan.borrowerId);
-      return {
-        id: loan.id,
-        loanId: loan.id,
-        borrowerId: loan.borrowerId,
-        borrowerName: borrower?.name || loan.borrowerName,
-        amount: loan.paymentSchedule?.installmentAmount || 0,
-        date: loan.paymentSchedule?.nextPaymentDate || '',
-      };
-    })
-    // Ordenar por data de pagamento (mais próximos primeiro)
-    .sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime())
-    // Limitar a 5 resultados para o dashboard
-    .slice(0, 5);
+  // Empréstimos com data de próximo pagamento
+  const loansWithPayments = activeLoans.filter(loan => 
+    loan.paymentSchedule && loan.paymentSchedule.nextPaymentDate
+  );
+  
+  // Ordenar por data de próximo pagamento (do mais próximo para o mais distante)
+  const sortedLoans = [...loansWithPayments].sort((a, b) => {
+    const dateA = parseISO(a.paymentSchedule!.nextPaymentDate);
+    const dateB = parseISO(b.paymentSchedule!.nextPaymentDate);
+    return dateA.getTime() - dateB.getTime();
+  });
+  
+  // Pegar apenas os próximos 5 pagamentos
+  const upcomingPayments = sortedLoans.slice(0, 5);
+  
+  // Data atual para calcular dias até o próximo pagamento
+  const today = new Date();
   
   return (
-    <Card>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-semibold">Próximos Pagamentos</CardTitle>
-        <Link href="/payments">
-          <Button variant="link" className="text-primary">
-            Ver todos
+    <Card className="card-premium">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-center">
+          <CardTitle>Próximos Pagamentos</CardTitle>
+          <Button asChild size="sm" variant="ghost">
+            <Link href="/payments">
+              <CalendarPlus className="h-4 w-4 mr-1" />
+              Registrar
+            </Link>
           </Button>
-        </Link>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50">
-              <TableRow>
-                <TableHead className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Mutuário</TableHead>
-                <TableHead className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</TableHead>
-                <TableHead className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Data</TableHead>
-                <TableHead className="px-3 py-2 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Ação</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {upcomingPayments.map((payment) => (
-                <TableRow key={payment.id}>
-                  <TableCell className="px-3 py-2 whitespace-nowrap text-sm font-medium text-slate-900">
-                    {payment.borrowerName}
-                  </TableCell>
-                  <TableCell className="px-3 py-2 whitespace-nowrap text-sm text-slate-700">
-                    {formatCurrency(payment.amount)}
-                  </TableCell>
-                  <TableCell className="px-3 py-2 whitespace-nowrap text-sm text-slate-700">
-                    {formatDate(payment.date)}
-                  </TableCell>
-                  <TableCell className="px-3 py-2 whitespace-nowrap text-sm text-right">
-                    <Link href={`/loans/${payment.loanId}`}>
-                      <Button variant="link" className="text-primary h-auto p-0">
-                        Registrar
-                      </Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {upcomingPayments.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4 text-slate-500">
-                    Nenhum pagamento próximo encontrado
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        {upcomingPayments.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Nenhum pagamento agendado</p>
+            <Button asChild className="mt-4" variant="outline">
+              <Link href="/loans">
+                <CalendarPlus className="h-4 w-4 mr-1" />
+                Ver Empréstimos
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {upcomingPayments.map(loan => {
+              const nextPaymentDate = parseISO(loan.paymentSchedule!.nextPaymentDate);
+              const daysUntilPayment = differenceInDays(nextPaymentDate, today);
+              
+              let urgencyColor = "text-slate-700";
+              let urgencyBg = "bg-slate-100";
+              
+              if (daysUntilPayment <= 0) {
+                urgencyColor = "text-red-700";
+                urgencyBg = "bg-red-100";
+              } else if (daysUntilPayment <= 3) {
+                urgencyColor = "text-amber-700";
+                urgencyBg = "bg-amber-100";
+              } else if (daysUntilPayment <= 7) {
+                urgencyColor = "text-orange-700";
+                urgencyBg = "bg-orange-100";
+              } else {
+                urgencyColor = "text-green-700";
+                urgencyBg = "bg-green-100";
+              }
+              
+              return (
+                <div key={loan.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">{loan.borrowerName}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatCurrency(loan.paymentSchedule!.installmentAmount)} • {formatDate(loan.paymentSchedule!.nextPaymentDate)}
+                      </div>
+                    </div>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${urgencyBg} ${urgencyColor}`}>
+                      <Clock className="h-3 w-3 mr-1" />
+                      {daysUntilPayment <= 0 
+                        ? "Hoje" 
+                        : daysUntilPayment === 1 
+                          ? "Amanhã"
+                          : `${daysUntilPayment} dias`}
+                    </div>
+                  </div>
+                  <div className="mt-2 flex justify-end">
+                    <Button asChild size="sm" variant="ghost">
+                      <Link href={`/loans/${loan.id}`}>
+                        <CalendarPlus className="h-3 w-3 mr-1" />
+                        Registrar Pagamento
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
