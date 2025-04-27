@@ -2,166 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Tema financeiro moderno com verde-azulado */
-  --background: 204 20% 98%;
-  --foreground: 215 25% 12%;
-  --muted: 210 10% 95%;
-  --muted-foreground: 215 12% 40%;
-  --popover: 204 20% 98%;
-  --popover-foreground: 215 25% 12%;
-  --card: 0 0% 100%;
-  --card-foreground: 215 25% 12%;
-  --border: 210 16% 90%;
-  --input: 210 16% 90%;
-  --primary: 175 80% 35%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 210 25% 96%;
-  --secondary-foreground: 215 18% 30%;
-  --accent: 165 75% 42%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 70% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --ring: 175 80% 35%;
-  --radius: 0.75rem;
-  
-  /* Cores de status para empréstimos */
-  --status-active: 175 80% 35%; /* Verde-azulado (principal) */
-  --status-paid: 165 75% 42%; /* Verde claro */
-  --status-overdue: 350 60% 50%; /* Vermelho mais suave */
-  --status-defaulted: 0 70% 50%; /* Vermelho padrão */
-  
-  /* Gradientes */
-  --gradient-primary: linear-gradient(135deg, hsl(175 80% 35%), hsl(185 75% 40%));
-  --gradient-success: linear-gradient(135deg, hsl(165 75% 42%), hsl(145 70% 50%));
-  --gradient-warning: linear-gradient(135deg, hsl(40 90% 50%), hsl(35 95% 55%));
-  --gradient-danger: linear-gradient(135deg, hsl(350 60% 50%), hsl(0 70% 50%));
-}
-
-.dark {
-  /* Tema escuro refinado para ambiente financeiro */
-  --background: 215 25% 9%;
-  --foreground: 210 10% 92%;
-  --muted: 215 15% 15%;
-  --muted-foreground: 210 10% 70%;
-  --popover: 215 25% 9%;
-  --popover-foreground: 210 10% 92%;
-  --card: 215 25% 12%;
-  --card-foreground: 210 10% 92%;
-  --border: 215 15% 20%;
-  --input: 215 15% 20%;
-  --primary: 175 75% 40%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 215 15% 15%;
-  --secondary-foreground: 210 10% 92%;
-  --accent: 165 70% 45%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 60% 45%;
-  --destructive-foreground: 0 0% 100%;
-  --ring: 175 75% 40%;
-  --radius: 0.75rem;
-  
-  /* Cores de status para empréstimos (modo escuro) */
-  --status-active: 175 75% 40%; /* Verde-azulado mais brilhante */
-  --status-paid: 165 70% 45%; /* Verde claro ajustado para escuro */
-  --status-overdue: 350 60% 55%; /* Vermelho mais visível no modo escuro */
-  --status-defaulted: 0 60% 45%; /* Vermelho para modo escuro */
-  
-  /* Gradientes para modo escuro */
-  --gradient-primary: linear-gradient(135deg, hsl(175 75% 40%), hsl(185 70% 45%));
-  --gradient-success: linear-gradient(135deg, hsl(165 70% 45%), hsl(145 65% 55%));
-  --gradient-warning: linear-gradient(135deg, hsl(40 85% 55%), hsl(35 90% 60%));
-  --gradient-danger: linear-gradient(135deg, hsl(350 60% 55%), hsl(0 60% 50%));
-}
-
 @layer base {
-  * {
-    @apply border-border;
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+ 
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+ 
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+ 
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --ring: 215 20.2% 65.1%;
+ 
+    --radius: 0.5rem;
   }
-
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
-  }
-  
-  h1 {
-    @apply text-3xl md:text-4xl;
-  }
-  
-  h2 {
-    @apply text-2xl md:text-3xl;
-  }
-  
-  h3 {
-    @apply text-xl md:text-2xl;
-  }
-}
-
-@layer components {
-  /* Cards com estilo financeiro */
-  .card-premium {
-    @apply rounded-xl border bg-card text-card-foreground shadow-md transition-all hover:shadow-lg;
-  }
-  
-  /* Gradientes para textos e botões */
-  .text-gradient-primary {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(175,80%,35%)] to-[hsl(185,75%,40%)];
-  }
-  
-  .text-gradient-success {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(165,75%,42%)] to-[hsl(145,70%,50%)];
-  }
-  
-  /* Botões com gradiente */
-  .btn-gradient-primary {
-    @apply bg-gradient-to-r from-[hsl(175,80%,35%)] to-[hsl(185,75%,40%)] text-white hover:shadow-md transition-all;
-  }
-  
-  .btn-gradient-success {
-    @apply bg-gradient-to-r from-[hsl(165,75%,42%)] to-[hsl(145,70%,50%)] text-white hover:shadow-md transition-all;
-  }
-  
-  /* Chips de status */
-  .status-chip {
-    @apply px-3 py-1 rounded-full text-xs font-medium;
-  }
-  
-  .status-active {
-    @apply bg-[hsl(175,80%,35%)] text-white;
-  }
-  
-  .status-paid {
-    @apply bg-[hsl(165,75%,42%)] text-white;
-  }
-  
-  .status-overdue {
-    @apply bg-[hsl(350,60%,50%)] text-white;
-  }
-  
-  .status-defaulted {
-    @apply bg-[hsl(0,70%,50%)] text-white;
-  }
-  
-  /* Dashboard cards */
-  .dashboard-card {
-    @apply rounded-xl border bg-card p-4 shadow transition-all hover:shadow-md;
-  }
-  
-  /* Animações suaves */
-  .animate-fade-in {
-    @apply opacity-0 animate-in fade-in duration-300;
-  }
-  
-  .animate-slide-up {
-    @apply opacity-0 animate-in slide-in-from-bottom-4 duration-300;
-  }
-  
-  /* Glass effect */
-  .glass-effect {
-    @apply bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 dark:border-slate-700/20;
+ 
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+ 
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+ 
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+ 
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+ 
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+ 
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+ 
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --ring: 216 34% 17%;
+ 
+    --radius: 0.5rem;
   }
 }
 
