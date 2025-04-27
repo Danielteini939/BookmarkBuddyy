@@ -1,4 +1,5 @@
 import { BorrowerType, LoanType, PaymentType, AppSettings } from "@/types";
+import { mockBorrowers, mockLoans, mockPayments } from "@/utils/mockData";
 
 // Chaves para armazenar os dados no localStorage
 const STORAGE_KEYS = {
@@ -12,40 +13,53 @@ const STORAGE_KEYS = {
 export function loadBorrowers(): BorrowerType[] {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.BORROWERS);
-    return data ? JSON.parse(data) : [];
+    return data ? JSON.parse(data) : mockBorrowers;
   } catch (error) {
     console.error('Erro ao carregar mutuários:', error);
-    return [];
+    return mockBorrowers;
   }
 }
 
 export function loadLoans(): LoanType[] {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.LOANS);
-    return data ? JSON.parse(data) : [];
+    return data ? JSON.parse(data) : mockLoans;
   } catch (error) {
     console.error('Erro ao carregar empréstimos:', error);
-    return [];
+    return mockLoans;
   }
 }
 
 export function loadPayments(): PaymentType[] {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
-    return data ? JSON.parse(data) : [];
+    return data ? JSON.parse(data) : mockPayments;
   } catch (error) {
     console.error('Erro ao carregar pagamentos:', error);
-    return [];
+    return mockPayments;
   }
 }
 
 export function loadSettings(): AppSettings | null {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return data ? JSON.parse(data) : null;
+    if (!data) {
+      return {
+        defaultInterestRate: 5,
+        defaultPaymentFrequency: "monthly",
+        defaultInstallments: 12,
+        currency: "R$"
+      };
+    }
+    return JSON.parse(data);
   } catch (error) {
     console.error('Erro ao carregar configurações:', error);
-    return null;
+    return {
+      defaultInterestRate: 5,
+      defaultPaymentFrequency: "monthly",
+      defaultInstallments: 12,
+      currency: "R$"
+    };
   }
 }
 

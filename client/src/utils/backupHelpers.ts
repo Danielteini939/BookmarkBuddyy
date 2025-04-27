@@ -27,7 +27,7 @@ export function createBackup(
   return {
     version: '1.0',
     timestamp: new Date().toISOString(),
-    description: description || `Backup automático - ${new Date().toLocaleString()}`,
+    description: description || `Backup manual - ${new Date().toLocaleString()}`,
     borrowers,
     loans,
     payments,
@@ -178,96 +178,17 @@ function generateCsvFromData(
   return csvContent;
 }
 
-/**
- * Salva um backup automático no localStorage
- */
-export function saveAutoBackup(
-  borrowers: BorrowerType[],
-  loans: LoanType[],
-  payments: PaymentType[],
-  settings: AppSettings
-): void {
-  try {
-    const backupData = createBackup(borrowers, loans, payments, settings, 'Backup automático');
-    const backupKey = `loanbuddy_autobackup_${new Date().toISOString()}`;
-    
-    // Lista de backups
-    let backupList: string[] = [];
-    const storedList = localStorage.getItem('loanbuddy_backup_list');
-    if (storedList) {
-      backupList = JSON.parse(storedList);
-    }
-    
-    // Adicionar novo backup à lista
-    backupList.unshift(backupKey);
-    
-    // Manter apenas os últimos 5 backups automáticos
-    if (backupList.length > 5) {
-      const oldBackups = backupList.splice(5);
-      oldBackups.forEach(key => localStorage.removeItem(key));
-    }
-    
-    // Salvar a lista atualizada e o novo backup
-    localStorage.setItem('loanbuddy_backup_list', JSON.stringify(backupList));
-    localStorage.setItem(backupKey, JSON.stringify(backupData));
-    
-    console.log('Backup automático salvo com sucesso:', backupKey);
-  } catch (error) {
-    console.error('Erro ao salvar backup automático:', error);
-  }
+// Funções fictícias para compatibilidade - não fazem nada por não usar mais localStorage
+export function saveAutoBackup(): void {
+  console.log('Sistema de backup automático desativado. Dados não persistidos.');
 }
 
-/**
- * Obtém a lista de backups automáticos disponíveis
- */
 export function getAutoBackupsList(): { key: string; timestamp: Date; description: string }[] {
-  try {
-    const storedList = localStorage.getItem('loanbuddy_backup_list');
-    if (!storedList) return [];
-    
-    const backupList: string[] = JSON.parse(storedList);
-    const backupDetails = backupList.map(key => {
-      try {
-        const backupDataStr = localStorage.getItem(key);
-        if (!backupDataStr) return null;
-        
-        const backupData = JSON.parse(backupDataStr);
-        return {
-          key,
-          timestamp: new Date(backupData.timestamp),
-          description: backupData.description || 'Backup automático'
-        };
-      } catch {
-        return null;
-      }
-    }).filter(item => item !== null) as { key: string; timestamp: Date; description: string }[];
-    
-    return backupDetails;
-  } catch (error) {
-    console.error('Erro ao obter lista de backups automáticos:', error);
-    return [];
-  }
+  console.log('Sistema de backup automático desativado. Dados não persistidos.');
+  return [];
 }
 
-/**
- * Restaura um backup automático pelo identificador
- */
-export function restoreFromAutoBackup(backupKey: string): BackupData | null {
-  try {
-    const backupDataStr = localStorage.getItem(backupKey);
-    if (!backupDataStr) return null;
-    
-    const backupData = JSON.parse(backupDataStr);
-    const validation = validateBackup(backupData);
-    
-    if (!validation.valid) {
-      console.error('Backup inválido:', validation.errors);
-      return null;
-    }
-    
-    return backupData;
-  } catch (error) {
-    console.error('Erro ao restaurar do backup automático:', error);
-    return null;
-  }
+export function restoreFromAutoBackup(): BackupData | null {
+  console.log('Sistema de backup automático desativado. Dados não persistidos.');
+  return null;
 }
