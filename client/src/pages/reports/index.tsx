@@ -1,13 +1,14 @@
 import React from 'react';
 import ReportGenerator from '@/components/reports/ReportGenerator';
-import Layout from '@/components/layout/Layout';
+import { useLoan } from '@/context/LoanContext';
 
 export default function ReportsPage() {
+  // Verificamos se o contexto está acessível aqui para garantir que o componente seja renderizado corretamente
+  const loanContext = useLoan();
+  
   return (
-    <Layout>
-      <div className="container mx-auto p-4">
-        <ReportGenerator />
-      </div>
-    </Layout>
+    <div className="container mx-auto">
+      <ReportGenerator />
+    </div>
   );
 }

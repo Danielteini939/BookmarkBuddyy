@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { useLoan } from '@/context/LoanContext';
 import { LoanType, PaymentType } from '@/types';
@@ -22,7 +22,19 @@ import { Label } from '@/components/ui/label';
 const COLORS = ['#4ade80', '#f87171', '#fb923c', '#60a5fa'];
 
 const ReportGenerator = () => {
-  const { loans, payments, borrowers, getDashboardMetrics } = useLoan();
+  let loanContext = null;
+  try {
+    loanContext = useLoan();
+  } catch (error) {
+    console.error("Erro no contexto LoanProvider:", error);
+    return <div className="p-8 text-center">
+      <h1 className="text-2xl font-bold text-red-600 mb-4">Erro ao carregar relatórios</h1>
+      <p className="mb-2">Não foi possível acessar os dados de empréstimos.</p>
+      <p>Por favor, tente reiniciar a aplicação ou contate o suporte.</p>
+    </div>;
+  }
+  
+  const { loans, payments, borrowers, getDashboardMetrics } = loanContext;
   const [reportType, setReportType] = useState<string>('summary');
   const [dateRange, setDateRange] = useState<string>('month');
   const reportRef = useRef<HTMLDivElement>(null);
@@ -190,10 +202,10 @@ const ReportGenerator = () => {
   };
 
   // Hook para impressão
+  // @ts-ignore - Há um problema com a tipagem da biblioteca useReactToPrint
   const handlePrint = useReactToPrint({
     documentTitle: 'Relatório de Empréstimos',
     copyStyles: true,
-    // @ts-ignore - Há um problema com a tipagem da biblioteca
     content: () => reportRef.current,
   });
 
