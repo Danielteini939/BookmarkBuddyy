@@ -431,39 +431,56 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
       if (!loan.paymentSchedule || !loan.paymentSchedule.nextPaymentDate) return false;
       
       try {
-        // Verificar a data do próximo pagamento usando parseISO para formato ISO
-        const nextPaymentDate = parseISO(loan.paymentSchedule.nextPaymentDate);
+        // Tratar a data do próximo pagamento
+        let nextPaymentDate;
+        const dateStr = loan.paymentSchedule.nextPaymentDate;
+        
+        // Verificar o formato da data e fazer o parse apropriado
+        if (typeof dateStr === 'string') {
+          // Tenta tratar como data ISO
+          try {
+            nextPaymentDate = parseISO(dateStr);
+            
+            // Verificar se é uma data válida
+            if (isNaN(nextPaymentDate.getTime())) {
+              throw new Error('Data inválida após parseISO');
+            }
+          } catch (e) {
+            // Tenta tratar como formato DD/MM/YYYY
+            if (dateStr.includes('/')) {
+              const parts = dateStr.split('/');
+              if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // Meses são 0-indexed em JS
+                const year = parseInt(parts[2], 10);
+                nextPaymentDate = new Date(year, month, day);
+              } else {
+                return false; // Formato de data inválido
+              }
+            } else {
+              return false; // Não conseguiu analisar a data
+            }
+          }
+        } else {
+          return false; // nextPaymentDate não é uma string
+        }
         
         // Zerar horas, minutos e segundos para comparação apenas por dia
         const nextPaymentDay = new Date(nextPaymentDate);
         nextPaymentDay.setHours(0, 0, 0, 0);
         
-        // Para debugging
-        console.log('Loan ID:', loan.id);
-        console.log('Payment Date String:', loan.paymentSchedule.nextPaymentDate);
-        console.log('Payment Date Parsed:', nextPaymentDate);
-        console.log('Today (zeroed time):', today);
-        console.log('Payment Date (zeroed time):', nextPaymentDay);
-        console.log('Future Date:', futureDate);
-        console.log('Is Valid Date:', !isNaN(nextPaymentDate.getTime()));
-        
         // IMPORTANTE: Modificado para incluir pagamentos do dia atual
         // nextPaymentDay <= today significa que o pagamento é devido hoje ou já está atrasado
         // Queremos exibir estes pagamentos também
         const isToday = nextPaymentDay.getTime() === today.getTime();
-        console.log('Is Today?', isToday);
-        
         const isUpcoming = nextPaymentDay > today && nextPaymentDay <= futureDate;
-        console.log('Is Upcoming?', isUpcoming);
-        
         const isDue = nextPaymentDay <= today; // Devido hoje ou atrasado
-        console.log('Is Due?', isDue);
         
         // Retorna true se o pagamento for para hoje, estiver próximo, ou estiver atrasado (mas ainda não pago)
         return !isNaN(nextPaymentDate.getTime()) && 
                (isToday || isUpcoming || (isDue && loan.status !== 'paid'));
       } catch (error) {
-        console.warn('Erro ao analisar paymentSchedule:', error);
+        console.warn('Erro ao analisar paymentSchedule para o empréstimo ' + loan.id + ':', error);
         return false;
       }
     });
