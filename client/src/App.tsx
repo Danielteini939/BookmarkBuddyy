@@ -45,8 +45,8 @@ function App() {
       <TooltipProvider>
         <LoanProvider>
           <Router />
-          <Toaster />
         </LoanProvider>
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );
