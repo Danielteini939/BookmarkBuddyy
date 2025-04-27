@@ -332,10 +332,10 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
 };
 
 // Hook para usar o contexto
-export const useLoan = () => {
+export function useLoan() {
   const context = useContext(LoanContext);
   if (!context) {
     throw new Error("useLoan must be used within a LoanProvider");
   }
   return context;
-};
+}
