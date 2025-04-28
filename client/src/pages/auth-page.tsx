@@ -3,21 +3,18 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 export default function AuthPage() {
-  const { user, signIn, signUp, loading } = useAuth();
+  const { user, signIn, loading } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState("login");
 
   // Redirecionar para home se já estiver logado
   useEffect(() => {
@@ -56,46 +53,6 @@ export default function AuthPage() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password || !confirmPassword) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({
-        title: "Senhas não coincidem",
-        description: "A senha e a confirmação devem ser iguais",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const { error } = await signUp(email, password);
-      if (error) throw error;
-      toast({
-        title: "Cadastro realizado com sucesso",
-        description: "Verifique seu email para confirmar o cadastro",
-      });
-      setActiveTab("login");
-    } catch (error: any) {
-      toast({
-        title: "Erro ao criar conta",
-        description: error.message || "Tente novamente mais tarde",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -116,105 +73,48 @@ export default function AuthPage() {
             </p>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Cadastro</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full mt-6"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center">
-                      <span className="animate-spin mr-2 h-4 w-4 border-b-2 border-white rounded-full"></span>
-                      Entrando...
-                    </span>
-                  ) : (
-                    "Entrar"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Senha</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirmar Senha</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full mt-6"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center">
-                      <span className="animate-spin mr-2 h-4 w-4 border-b-2 border-white rounded-full"></span>
-                      Cadastrando...
-                    </span>
-                  ) : (
-                    "Cadastrar"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full mt-6"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span className="flex items-center">
+                  <span className="animate-spin mr-2 h-4 w-4 border-b-2 border-white rounded-full"></span>
+                  Entrando...
+                </span>
+              ) : (
+                "Entrar"
+              )}
+            </Button>
+          </form>
+          
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            <p>O cadastro de usuários é realizado pelo administrador do sistema.</p>
+          </div>
         </Card>
       </div>
 
