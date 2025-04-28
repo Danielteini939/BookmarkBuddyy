@@ -4,14 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { FcGoogle } from "react-icons/fc";
 
 export default function AuthPage() {
-  const { user, signIn, signUp, signInWithGoogle, loading } = useAuth();
+  const { user, signIn, signUp, loading } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
@@ -163,46 +161,6 @@ export default function AuthPage() {
                   )}
                 </Button>
               </form>
-              
-              <div className="my-6 relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    ou continue com
-                  </span>
-                </div>
-              </div>
-              
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={async () => {
-                  setIsSubmitting(true);
-                  try {
-                    const { error } = await signInWithGoogle();
-                    if (error) throw error;
-                    toast({
-                      title: "Login realizado com sucesso",
-                      description: "Você será redirecionado para o Dashboard",
-                    });
-                  } catch (error: any) {
-                    toast({
-                      title: "Erro ao fazer login com Google",
-                      description: error.message || "Tente novamente mais tarde",
-                      variant: "destructive",
-                    });
-                  } finally {
-                    setIsSubmitting(false);
-                  }
-                }}
-                disabled={isSubmitting}
-              >
-                <FcGoogle className="mr-2 h-4 w-4" />
-                Google
-              </Button>
             </TabsContent>
 
             <TabsContent value="signup">
@@ -255,46 +213,6 @@ export default function AuthPage() {
                   )}
                 </Button>
               </form>
-              
-              <div className="my-6 relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    ou continue com
-                  </span>
-                </div>
-              </div>
-              
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={async () => {
-                  setIsSubmitting(true);
-                  try {
-                    const { error } = await signInWithGoogle();
-                    if (error) throw error;
-                    toast({
-                      title: "Login realizado com sucesso",
-                      description: "Você será redirecionado para o Dashboard",
-                    });
-                  } catch (error: any) {
-                    toast({
-                      title: "Erro ao fazer login com Google",
-                      description: error.message || "Tente novamente mais tarde",
-                      variant: "destructive",
-                    });
-                  } finally {
-                    setIsSubmitting(false);
-                  }
-                }}
-                disabled={isSubmitting}
-              >
-                <FcGoogle className="mr-2 h-4 w-4" />
-                Google
-              </Button>
             </TabsContent>
           </Tabs>
         </Card>
