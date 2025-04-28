@@ -1,155 +1,193 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import type { User, Session } from "@supabase/supabase-js";
+import type { User, Session, AuthError } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
-// Simulação de usuário para fins de demonstração
-interface DemoUser {
-  id: string;
-  email: string;
-  picture?: string;
-  name?: string;
-}
+// Verificar se estamos em modo de simulação
+const SIMULATION_MODE = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Em modo de simulação, precisamos de usuários de demonstração
+const demoUsers = SIMULATION_MODE ? [
+  { email: "admin@exemplo.com", password: "senha123", id: "1" },
+  { email: "usuario@teste.com", password: "123456", id: "2" }
+] : [];
 
 interface AuthContextType {
   session: Session | null;
-  user: DemoUser | null;
+  user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any, user: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null, user: User | null }>;
+  signInWithGoogle: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Dados de demonstração
-const demoUsers = [
-  { email: "admin@exemplo.com", password: "senha123", id: "1" },
-  { email: "usuario@teste.com", password: "123456", id: "2" }
-];
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<DemoUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se há um usuário salvo no localStorage
-    const savedUser = localStorage.getItem('demoUser');
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      // Criar uma sessão simulada
-      setSession({ 
-        user: parsedUser, 
-        access_token: "demo-token", 
-        refresh_token: "demo-refresh",
-        expires_in: 3600,
-        token_type: "bearer"
-      } as unknown as Session);
+    // Definimos diferentes comportamentos para modo simulação vs real
+    if (SIMULATION_MODE) {
+      // Modo simulação: Verificar se há um usuário salvo no localStorage
+      const savedUser = localStorage.getItem('demoUser');
+      
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser) as User;
+          setUser(parsedUser);
+          
+          // Criar uma sessão simulada
+          setSession({ 
+            user: parsedUser, 
+            access_token: "demo-token", 
+            refresh_token: "demo-refresh",
+            expires_in: 3600,
+            token_type: "bearer"
+          } as unknown as Session);
+        } catch (e) {
+          console.error("Erro ao processar usuário salvo:", e);
+          localStorage.removeItem('demoUser');
+        }
+      }
+      
+      // Simulação de carregamento
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    } else {
+      // Modo real: Verificar sessão atual do Supabase
+      const fetchSession = async () => {
+        setLoading(true);
+        
+        // Obter sessão atual
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+        }
+        
+        // Configurar listener para mudanças de autenticação
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (_event, newSession) => {
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            setLoading(false);
+          }
+        );
+
+        setLoading(false);
+        
+        // Cleanup
+        return () => {
+          subscription.unsubscribe();
+        };
+      };
+
+      fetchSession();
     }
-    
-    // Simulação de carregamento
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    // Simular um delay para parecer uma requisição real
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Verificar se o usuário existe na nossa "base de dados" de demonstração
-    const foundUser = demoUsers.find(
-      u => u.email === email && u.password === password
-    );
-    
-    if (foundUser) {
-      const user = { id: foundUser.id, email: foundUser.email };
-      setUser(user);
-      // Criar uma sessão simulada completa
-      setSession({ 
-        user, 
-        access_token: "demo-token", 
-        refresh_token: "demo-refresh",
-        expires_in: 3600,
-        token_type: "bearer"
-      } as unknown as Session);
-      localStorage.setItem('demoUser', JSON.stringify(user));
-      return { error: null };
-    }
-    
-    return {
-      error: {
-        message: "Credenciais inválidas. Tente novamente."
+    // Modo simulação
+    if (SIMULATION_MODE) {
+      // Verificar se o usuário existe na nossa "base de dados" de demonstração
+      const foundUser = demoUsers.find(
+        u => u.email === email && u.password === password
+      );
+      
+      if (foundUser) {
+        const demoUser = { 
+          id: foundUser.id, 
+          email: foundUser.email,
+          aud: "authenticated",
+          role: "authenticated",
+          app_metadata: {},
+          user_metadata: {},
+          created_at: new Date().toISOString()
+        } as unknown as User;
+        
+        setUser(demoUser);
+        
+        // Criar uma sessão simulada completa
+        setSession({ 
+          user: demoUser, 
+          access_token: "demo-token", 
+          refresh_token: "demo-refresh",
+          expires_in: 3600,
+          token_type: "bearer"
+        } as unknown as Session);
+        
+        localStorage.setItem('demoUser', JSON.stringify(demoUser));
+        return { error: null };
       }
-    };
+      
+      return {
+        error: { 
+          message: "Credenciais inválidas. Tente novamente." 
+        } as unknown as AuthError
+      };
+    } 
+    // Modo real
+    else {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        return { error };
+      } catch (err) {
+        console.error("Erro ao fazer login:", err);
+        return { 
+          error: new Error("Ocorreu um erro ao tentar fazer login") as unknown as AuthError
+        };
+      }
+    }
   };
 
   const signUp = async (email: string, password: string) => {
-    // Simular um delay para parecer uma requisição real
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Verificar se o email já existe
-    const userExists = demoUsers.some(u => u.email === email);
-    
-    if (userExists) {
-      return {
-        error: {
-          message: "Este email já está em uso."
-        },
-        user: null
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+      
+      return { error, user: data?.user || null };
+    } catch (err) {
+      console.error("Erro ao criar conta:", err);
+      return { 
+        error: new Error("Ocorreu um erro ao tentar criar a conta") as unknown as AuthError,
+        user: null 
       };
     }
-    
-    // Criar novo usuário (apenas na memória, em um app real seria salvo no banco)
-    const newUser = { 
-      id: `${demoUsers.length + 1}`, 
-      email,
-      password // Em um app real nunca salvaríamos senhas em texto puro
-    };
-    
-    // Adicionar à lista de usuários (simulação)
-    demoUsers.push(newUser);
-    
-    // Retornar sucesso
-    return { 
-      error: null, 
-      user: { id: newUser.id, email: newUser.email } 
-    };
   };
 
   const signInWithGoogle = async () => {
-    // Simular um delay para parecer uma requisição real
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Criar um usuário de demonstração baseado no Google
-    const googleUser = {
-      id: "google-user-123",
-      email: "usuario.google@exemplo.com",
-      name: "Usuário Google",
-      picture: "https://ui-avatars.com/api/?name=Usuário+Google&background=0D8ABC&color=fff"
-    };
-    
-    setUser(googleUser);
-    // Cast para Session para simular uma sessão real
-    setSession({ 
-      user: googleUser, 
-      access_token: "demo-token", 
-      refresh_token: "demo-refresh",
-      expires_in: 3600,
-      token_type: "bearer"
-    } as unknown as Session);
-    localStorage.setItem('demoUser', JSON.stringify(googleUser));
-    
-    return { error: null };
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      return { error };
+    } catch (err) {
+      console.error("Erro ao fazer login com Google:", err);
+      return { 
+        error: new Error("Ocorreu um erro ao tentar fazer login com o Google") as unknown as AuthError
+      };
+    }
   };
 
   const signOut = async () => {
-    setUser(null);
-    setSession(null);
-    localStorage.removeItem('demoUser');
+    await supabase.auth.signOut();
   };
 
   return (

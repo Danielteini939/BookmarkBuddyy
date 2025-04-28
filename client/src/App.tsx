@@ -21,10 +21,14 @@ import Reports from "@/pages/reports";
 import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth-page";
 
+// Importe o componente de callback
+import AuthCallback from "@/pages/auth/callback";
+
 function AppRoutes() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/auth/callback" component={AuthCallback} />
       
       <ProtectedRoute path="/">
         <Layout>
