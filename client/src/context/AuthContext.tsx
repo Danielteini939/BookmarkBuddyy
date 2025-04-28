@@ -68,7 +68,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (foundUser) {
       const user = { id: foundUser.id, email: foundUser.email };
       setUser(user);
-      setSession({ user } as Session);
+      // Criar uma sessão simulada completa
+      setSession({ 
+        user, 
+        access_token: "demo-token", 
+        refresh_token: "demo-refresh",
+        expires_in: 3600,
+        token_type: "bearer"
+      } as unknown as Session);
       localStorage.setItem('demoUser', JSON.stringify(user));
       return { error: null };
     }
