@@ -152,42 +152,139 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-      });
+    // Modo simulação
+    if (SIMULATION_MODE) {
+      // Verificar se o email já existe
+      const userExists = demoUsers.some(u => u.email === email);
       
-      return { error, user: data?.user || null };
-    } catch (err) {
-      console.error("Erro ao criar conta:", err);
-      return { 
-        error: new Error("Ocorreu um erro ao tentar criar a conta") as unknown as AuthError,
-        user: null 
+      if (userExists) {
+        return {
+          error: {
+            message: "Este email já está em uso."
+          } as unknown as AuthError,
+          user: null
+        };
+      }
+      
+      // Criar novo usuário de demonstração
+      const newUser = { 
+        id: `${demoUsers.length + 1}`, 
+        email,
+        password,
+        aud: "authenticated",
+        role: "authenticated",
+        app_metadata: {},
+        user_metadata: {},
+        created_at: new Date().toISOString() 
       };
+      
+      // Adicionar à lista de usuários de demonstração
+      demoUsers.push(newUser);
+      
+      // Retornar versão limpa (sem a senha)
+      const userWithoutPassword = {
+        id: newUser.id,
+        email: newUser.email,
+        aud: newUser.aud,
+        role: newUser.role,
+        app_metadata: newUser.app_metadata,
+        user_metadata: newUser.user_metadata,
+        created_at: newUser.created_at
+      } as unknown as User;
+      
+      return { 
+        error: null, 
+        user: userWithoutPassword 
+      };
+    } 
+    // Modo real
+    else {
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password
+        });
+        
+        return { error, user: data?.user || null };
+      } catch (err) {
+        console.error("Erro ao criar conta:", err);
+        return { 
+          error: new Error("Ocorreu um erro ao tentar criar a conta") as unknown as AuthError,
+          user: null 
+        };
+      }
     }
   };
 
   const signInWithGoogle = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
+    // Modo simulação
+    if (SIMULATION_MODE) {
+      // Simular um delay para parecer uma requisição real
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      return { error };
-    } catch (err) {
-      console.error("Erro ao fazer login com Google:", err);
-      return { 
-        error: new Error("Ocorreu um erro ao tentar fazer login com o Google") as unknown as AuthError
-      };
+      // Criar um usuário de demonstração baseado no Google
+      const googleUser = {
+        id: "google-user-123",
+        email: "usuario.google@exemplo.com",
+        aud: "authenticated",
+        role: "authenticated",
+        app_metadata: {},
+        user_metadata: {
+          name: "Usuário Google",
+          avatar_url: "https://ui-avatars.com/api/?name=Usuário+Google&background=0D8ABC&color=fff"
+        },
+        created_at: new Date().toISOString()
+      } as unknown as User;
+      
+      setUser(googleUser);
+      
+      // Criar uma sessão simulada completa
+      setSession({ 
+        user: googleUser, 
+        access_token: "demo-token", 
+        refresh_token: "demo-refresh",
+        expires_in: 3600,
+        token_type: "bearer"
+      } as unknown as Session);
+      
+      localStorage.setItem('demoUser', JSON.stringify(googleUser));
+      
+      // No modo simulação, não precisamos redirecionar
+      // Apenas simulamos o login bem sucedido
+      return { error: null };
+    }
+    // Modo real 
+    else {
+      try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        });
+        
+        return { error };
+      } catch (err) {
+        console.error("Erro ao fazer login com Google:", err);
+        return { 
+          error: new Error("Ocorreu um erro ao tentar fazer login com o Google") as unknown as AuthError
+        };
+      }
     }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (SIMULATION_MODE) {
+      // Remover usuário e sessão do estado
+      setUser(null);
+      setSession(null);
+      
+      // Remover do localStorage
+      localStorage.removeItem('demoUser');
+    } else {
+      // Usar o método real do Supabase
+      await supabase.auth.signOut();
+    }
   };
 
   return (
