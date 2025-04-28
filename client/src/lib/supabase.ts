@@ -1,19 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Usando valores de demonstração temporários (simulação)
-// Em produção, use as variáveis de ambiente adequadas
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://demo-supabase-url.supabase.co";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "demo-anon-key";
+// Obter as variáveis de ambiente
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Verificar se as variáveis reais estão definidas
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn("Variáveis de ambiente do Supabase não estão configuradas corretamente.");
-  console.warn("Por favor, defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
-  console.warn("Usando modo de simulação para demonstração.");
+// Verificar se as variáveis estão definidas
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Variáveis de ambiente do Supabase não estão configuradas corretamente.");
+  console.error("Por favor, defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
+  throw new Error("Configuração do Supabase incompleta");
 }
 
-// Criar cliente Supabase (se estamos em modo de simulação, este objeto 
-// será usado apenas para tipagem, mas o AuthContext usará uma implementação simulada)
+// Criar cliente Supabase
 export const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey,
