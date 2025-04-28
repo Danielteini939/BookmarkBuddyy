@@ -42,6 +42,9 @@ export default function LoanStatusChart() {
       overdueData.push(0, 1, 1, 2, 1, 2, 2, 3, 2, 3, 3, 3);
       defaultedData.push(0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1);
 
+      // Verificar se o canvas existe
+      if (!chartRef.current) return;
+      
       const ctx = chartRef.current.getContext("2d");
       if (!ctx) return;
 
