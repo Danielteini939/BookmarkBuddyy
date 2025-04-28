@@ -5,6 +5,8 @@ import type { User, Session } from "@supabase/supabase-js";
 interface DemoUser {
   id: string;
   email: string;
+  picture?: string;
+  name?: string;
 }
 
 interface AuthContextType {
@@ -13,6 +15,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any, user: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -35,7 +38,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
       setUser(parsedUser);
-      setSession({ user: parsedUser } as Session);
+      // Criar uma sessão simulada
+      setSession({ 
+        user: parsedUser, 
+        access_token: "demo-token", 
+        refresh_token: "demo-refresh",
+        expires_in: 3600,
+        token_type: "bearer"
+      } as unknown as Session);
     }
     
     // Simulação de carregamento
@@ -103,6 +113,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
+  const signInWithGoogle = async () => {
+    // Simular um delay para parecer uma requisição real
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Criar um usuário de demonstração baseado no Google
+    const googleUser = {
+      id: "google-user-123",
+      email: "usuario.google@exemplo.com",
+      name: "Usuário Google",
+      picture: "https://ui-avatars.com/api/?name=Usuário+Google&background=0D8ABC&color=fff"
+    };
+    
+    setUser(googleUser);
+    // Cast para Session para simular uma sessão real
+    setSession({ 
+      user: googleUser, 
+      access_token: "demo-token", 
+      refresh_token: "demo-refresh",
+      expires_in: 3600,
+      token_type: "bearer"
+    } as unknown as Session);
+    localStorage.setItem('demoUser', JSON.stringify(googleUser));
+    
+    return { error: null };
+  };
+
   const signOut = async () => {
     setUser(null);
     setSession(null);
@@ -110,7 +146,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      session, 
+      user, 
+      loading, 
+      signIn, 
+      signUp, 
+      signInWithGoogle, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
