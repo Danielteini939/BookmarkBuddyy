@@ -60,6 +60,7 @@ interface LoanContextType {
   getDashboardMetrics: () => DashboardMetrics;
   getOverdueLoans: () => LoanType[];
   getUpcomingDueLoans: (days: number) => LoanType[];
+  getEstimatedMonthlyPayments: () => number;
   
   // Settings
   updateSettings: (newSettings: Partial<AppSettings>) => void;
@@ -372,6 +373,42 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     };
   };
   
+  const getEstimatedMonthlyPayments = (): number => {
+    // Pegar empréstimos ativos que têm programação de pagamento
+    const activeLoans = loans.filter(loan => 
+      loan.status === 'active' && 
+      loan.paymentSchedule && 
+      loan.paymentSchedule.nextPaymentDate
+    );
+    
+    // Calcular a soma estimada de pagamentos para o mês atual
+    const estimatedTotal = activeLoans.reduce((sum, loan) => {
+      if (!loan.paymentSchedule) return sum;
+      
+      try {
+        // Verificar se a próxima data de pagamento é este mês
+        const nextPaymentDate = parseISO(loan.paymentSchedule.nextPaymentDate);
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        if (
+          nextPaymentDate.getMonth() === currentMonth && 
+          nextPaymentDate.getFullYear() === currentYear
+        ) {
+          // Adicionar o valor da prestação ao total estimado
+          return sum + loan.paymentSchedule.installmentAmount;
+        }
+      } catch (error) {
+        console.warn('Erro ao analisar data de pagamento:', error);
+      }
+      
+      return sum;
+    }, 0);
+    
+    return estimatedTotal;
+  };
+
   const getDashboardMetrics = (): DashboardMetrics => {
     const totalLoaned = loans.reduce((sum, loan) => sum + loan.principal, 0);
     
