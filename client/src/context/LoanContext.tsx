@@ -845,6 +845,7 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     getDashboardMetrics,
     getOverdueLoans,
     getUpcomingDueLoans,
+    getEstimatedMonthlyPayments,
     updateSettings,
     importData,
     exportData

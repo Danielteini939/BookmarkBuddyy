@@ -2,7 +2,7 @@ import {
   DollarSign, 
   TrendingUp, 
   Clock, 
-  Users,
+  CalendarClock,
   Wallet
 } from "lucide-react";
 import MetricCard from "@/components/dashboard/MetricCard";
@@ -13,16 +13,22 @@ import UpcomingPayments from "@/components/dashboard/UpcomingPayments";
 import OverdueLoans from "@/components/dashboard/OverdueLoans";
 import QuickActions from "@/components/dashboard/QuickActions";
 import { useLoan } from "@/context/LoanContext";
+import { format } from "date-fns";
+import { pt } from "date-fns/locale";
 
 export default function Dashboard() {
-  const { getDashboardMetrics, loans } = useLoan();
+  const { getDashboardMetrics, loans, getEstimatedMonthlyPayments } = useLoan();
   const metrics = getDashboardMetrics();
+  const estimatedMonthlyPayments = getEstimatedMonthlyPayments();
   
   // Calculate month-over-month growth
   const activeLoanGrowthLastMonth = 12; // Example value, could be calculated based on historical data
   const interestGrowthLastMonth = 8.5; // Example value, could be calculated based on historical data
   const newOverdueLastMonth = 3; // Example value, could be calculated based on historical data
-  const newBorrowersLastMonth = 2; // Example value, could be calculated based on historical data
+  
+  // Obter o nome do mês atual para exibição
+  const currentMonth = format(new Date(), 'MMMM', { locale: pt });
+  const capitalizedMonth = currentMonth.charAt(0).toUpperCase() + currentMonth.slice(1);
   
   return (
     <div>
@@ -81,17 +87,16 @@ export default function Dashboard() {
         />
         
         <MetricCard 
-          title="Total Mutuários" 
-          value={metrics.totalBorrowers}
-          icon={<Users className="h-6 w-6" />}
-          iconBgColor="bg-indigo-100"
-          iconColor="text-indigo-500"
+          title={`Previsto para ${capitalizedMonth}`}
+          value={estimatedMonthlyPayments}
+          icon={<CalendarClock className="h-6 w-6" />}
+          iconBgColor="bg-violet-100"
+          iconColor="text-violet-500"
           change={{
-            value: newBorrowersLastMonth.toString(),
+            value: "Estimativa",
             isPositive: true,
-            label: "novos este mês"
+            label: "baseada em parcelas"
           }}
-          isCurrency={false}
         />
       </div>
 
