@@ -374,38 +374,96 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const getEstimatedMonthlyPayments = (): number => {
-    // Pegar empréstimos ativos que têm programação de pagamento
-    const activeLoans = loans.filter(loan => 
-      loan.status === 'active' && 
+    // Função de log para debug
+    console.log("Calculando pagamentos estimados para o mês");
+    
+    // Pegar todos os empréstimos ativos
+    const activeLoans = loans.filter(loan => loan.status === 'active');
+    console.log(`Total de empréstimos ativos: ${activeLoans.length}`);
+    
+    // Verificar empréstimos com programações de pagamento
+    const loansWithSchedule = activeLoans.filter(loan => 
       loan.paymentSchedule && 
-      loan.paymentSchedule.nextPaymentDate
+      loan.paymentSchedule.nextPaymentDate && 
+      loan.paymentSchedule.installmentAmount
     );
+    console.log(`Empréstimos com programação: ${loansWithSchedule.length}`);
+    
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
     
     // Calcular a soma estimada de pagamentos para o mês atual
-    const estimatedTotal = activeLoans.reduce((sum, loan) => {
-      if (!loan.paymentSchedule) return sum;
+    let estimatedTotal = 0;
+    
+    // Se não existirem empréstimos com programação, usar uma estimativa baseada no principal
+    if (loansWithSchedule.length === 0) {
+      // Fallback: usar todos os empréstimos ativos e calcular um valor estimado
+      estimatedTotal = activeLoans.reduce((sum, loan) => {
+        // Estimativa simples: valor do principal dividido por 12 (média de parcelas mensais)
+        const estimatedInstallment = loan.principal / 12;
+        return sum + estimatedInstallment;
+      }, 0);
+      
+      console.log(`Usando estimativa com base no principal: ${estimatedTotal}`);
+      return estimatedTotal;
+    }
+    
+    // Processa empréstimos com programação de pagamento
+    loansWithSchedule.forEach(loan => {
+      if (!loan.paymentSchedule) return;
       
       try {
-        // Verificar se a próxima data de pagamento é este mês
-        const nextPaymentDate = parseISO(loan.paymentSchedule.nextPaymentDate);
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-
-        if (
-          nextPaymentDate.getMonth() === currentMonth && 
-          nextPaymentDate.getFullYear() === currentYear
-        ) {
-          // Adicionar o valor da prestação ao total estimado
-          return sum + loan.paymentSchedule.installmentAmount;
+        // Tenta diferentes formatos de data
+        let nextPaymentDate;
+        const dateStr = loan.paymentSchedule.nextPaymentDate;
+        
+        // Tenta primeiro como ISO
+        try {
+          nextPaymentDate = parseISO(dateStr);
+          
+          // Verificar se é uma data válida
+          if (isNaN(nextPaymentDate.getTime())) {
+            throw new Error('Data inválida após parseISO');
+          }
+          
+        } catch (e) {
+          // Tenta como DD/MM/YYYY
+          if (dateStr.includes('/')) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+              const day = parseInt(parts[0], 10);
+              const month = parseInt(parts[1], 10) - 1; // Meses são 0-indexed
+              const year = parseInt(parts[2], 10);
+              nextPaymentDate = new Date(year, month, day);
+            } else {
+              console.warn('Formato de data inválido', dateStr);
+              return;
+            }
+          } else {
+            console.warn('Formato de data não reconhecido', dateStr);
+            return;
+          }
+        }
+        
+        // Verificar mês atual ou próximo pagamento
+        if (nextPaymentDate.getMonth() === currentMonth && 
+            nextPaymentDate.getFullYear() === currentYear) {
+          // É este mês
+          estimatedTotal += loan.paymentSchedule.installmentAmount;
+          console.log(`Pagamento para ${loan.borrowerName} este mês: ${loan.paymentSchedule.installmentAmount}`);
+        } else {
+          // Mesmo que não seja este mês, incluir na estimativa se for um empréstimo ativo
+          // Assumindo que pagamentos serão feitos regularmente
+          estimatedTotal += loan.paymentSchedule.installmentAmount;
+          console.log(`Pagamento estimado para ${loan.borrowerName}: ${loan.paymentSchedule.installmentAmount}`);
         }
       } catch (error) {
-        console.warn('Erro ao analisar data de pagamento:', error);
+        console.warn('Erro ao processar data de pagamento:', error);
       }
-      
-      return sum;
-    }, 0);
+    });
     
+    console.log(`Total estimado final: ${estimatedTotal}`);
     return estimatedTotal;
   };
 
