@@ -96,6 +96,7 @@ export default function LoanList() {
                   <TableHead className="w-[200px]">Mutuário</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Taxa</TableHead>
+                  <TableHead>Parcela</TableHead>
                   <TableHead>Vencimento</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Saldo</TableHead>
@@ -105,7 +106,7 @@ export default function LoanList() {
               <TableBody>
                 {filteredLoans.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       Nenhum empréstimo encontrado.
                     </TableCell>
                   </TableRow>
@@ -115,6 +116,11 @@ export default function LoanList() {
                       <TableCell className="font-medium">{loan.borrowerName}</TableCell>
                       <TableCell>{formatCurrency(loan.principal)}</TableCell>
                       <TableCell>{loan.interestRate}%</TableCell>
+                      <TableCell>
+                        {loan.paymentSchedule?.installmentAmount 
+                          ? formatCurrency(loan.paymentSchedule.installmentAmount)
+                          : '-'}
+                      </TableCell>
                       <TableCell>{formatDate(loan.dueDate)}</TableCell>
                       <TableCell>
                         <StatusBadge status={loan.status} />
