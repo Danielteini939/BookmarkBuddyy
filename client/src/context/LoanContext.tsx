@@ -82,27 +82,12 @@ const initialSettings: AppSettings = {
 const LoanContext = createContext<LoanContextType | undefined>(undefined);
 
 export const LoanProvider = ({ children }: { children: ReactNode }) => {
-  // Inicializar com dados do localStorage ou dados mockados
-  const [borrowers, setBorrowers] = useState<BorrowerType[]>(() => {
-    const storedBorrowers = loadBorrowers();
-    return storedBorrowers.length > 0 ? storedBorrowers : mockBorrowers;
-  });
+  // Inicializar com arrays vazios em vez de dados mockados
+  const [borrowers, setBorrowers] = useState<BorrowerType[]>([]);
   
-  const [loans, setLoans] = useState<LoanType[]>(() => {
-    const storedLoans = loadLoans();
-    const initialLoans = storedLoans.length > 0 ? storedLoans : mockLoans;
-    
-    // Verificar se há empréstimos arquivados nos dados iniciais
-    const archivedCount = initialLoans.filter(loan => loan.status === 'archived').length;
-    console.log("Inicializando empréstimos:", initialLoans.length, "Total | Arquivados:", archivedCount);
-    
-    return initialLoans;
-  });
+  const [loans, setLoans] = useState<LoanType[]>([]);
   
-  const [payments, setPayments] = useState<PaymentType[]>(() => {
-    const storedPayments = loadPayments();
-    return storedPayments.length > 0 ? storedPayments : mockPayments;
-  });
+  const [payments, setPayments] = useState<PaymentType[]>([]);
   
   const [settings, setSettings] = useState<AppSettings>(() => {
     const storedSettings = loadSettings();
@@ -592,10 +577,9 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const getOverdueLoans = () => {
-    // Filtrar empréstimos em atraso, excluindo arquivados
+    // Filtrar empréstimos em atraso
     return loans.filter(loan => 
-      (loan.status === 'overdue' || loan.status === 'defaulted') && 
-      loan.status !== 'archived'
+      loan.status === 'overdue' || loan.status === 'defaulted'
     );
   };
   
@@ -706,7 +690,7 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
       // Verificar se é um reset
       if (data === 'RESET') {
         logOperationStart('RESET DE DADOS');
-        logInfo('Reiniciando dados para valores padrão');
+        logInfo('Limpando todos os dados');
         
         const defaultSettings = {
           defaultInterestRate: 5,
@@ -715,27 +699,28 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
           currency: "R$"
         };
         
-        setBorrowers([...mockBorrowers]);
-        setLoans([...mockLoans]);
-        setPayments([...mockPayments]);
+        // Limpar todos os dados (arrays vazios)
+        setBorrowers([]);
+        setLoans([]);
+        setPayments([]);
         setSettings(defaultSettings);
         
         // Salvar em memória (não em localStorage)
-        saveBorrowers([...mockBorrowers]);
-        saveLoans([...mockLoans]);
-        savePayments([...mockPayments]);
+        saveBorrowers([]);
+        saveLoans([]);
+        savePayments([]);
         saveSettings(defaultSettings);
         
-        logSuccess('Dados reiniciados com sucesso');
+        logSuccess('Dados limpos com sucesso');
         logOperationSuccess('RESET DE DADOS', {
-          Mutuários: mockBorrowers.length,
-          Empréstimos: mockLoans.length,
-          Pagamentos: mockPayments.length
+          Mutuários: 0,
+          Empréstimos: 0,
+          Pagamentos: 0
         });
         
         toast({
-          title: "Dados reiniciados",
-          description: "Todos os dados foram redefinidos para os valores padrão"
+          title: "Dados limpos",
+          description: "Todos os dados foram removidos do aplicativo"
         });
         
         return;
