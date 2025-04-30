@@ -26,6 +26,11 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { PlusCircle, Search, MoreVertical, Archive, ExternalLink, Edit, Eye, CreditCard } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useLoan } from "@/context/LoanContext";
@@ -165,11 +170,49 @@ export default function LoanList() {
                               <Edit className="h-4 w-4" />
                             </Button>
                           </Link>
-                          <Link href={`/payments/new?loanId=${loan.id}`}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" title="Registrar pagamento">
-                              <CreditCard className="h-4 w-4" />
-                            </Button>
-                          </Link>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" title="Pagamentos">
+                                <CreditCard className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 p-0">
+                              <div className="border-b px-4 py-3">
+                                <h4 className="text-sm font-semibold">Histórico de Pagamentos</h4>
+                              </div>
+                              <div className="px-4 py-2">
+                                {(() => {
+                                  const loanPayments = payments.filter(payment => payment.loanId === loan.id);
+                                  return loanPayments.length > 0 ? (
+                                    <div className="max-h-48 overflow-y-auto">
+                                      {loanPayments.map(payment => (
+                                        <div key={payment.id} className="py-2 border-b last:border-b-0">
+                                          <div className="flex justify-between">
+                                            <span className="text-sm font-medium">{formatDate(payment.date)}</span>
+                                            <span className="text-sm font-semibold text-emerald-600">{formatCurrency(payment.amount)}</span>
+                                          </div>
+                                          <div className="flex justify-between text-xs text-slate-500 mt-1">
+                                            <span>Principal: {formatCurrency(payment.principal)}</span>
+                                            <span>Juros: {formatCurrency(payment.interest)}</span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-slate-500 py-2">Nenhum pagamento registrado</p>
+                                  );
+                                })()}
+                              </div>
+                              <div className="border-t px-4 py-3 bg-slate-50 flex justify-end">
+                                <Link href={`/payments/new?loanId=${loan.id}`}>
+                                  <Button size="sm">
+                                    <PlusCircle className="h-3 w-3 mr-2" />
+                                    Registrar Pagamento
+                                  </Button>
+                                </Link>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                       </TableCell>
                     </TableRow>
