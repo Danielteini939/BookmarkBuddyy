@@ -43,6 +43,8 @@ interface LoanContextType {
   deleteLoan: (id: string) => void;
   getLoanById: (id: string) => LoanType | undefined;
   getLoansByBorrowerId: (borrowerId: string) => LoanType[];
+  archiveLoan: (id: string) => void;
+  getArchivedLoans: () => LoanType[];
   
   // Payment Operations
   addPayment: (payment: Omit<PaymentType, "id">) => void;
@@ -261,6 +263,43 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   
   const getLoansByBorrowerId = (borrowerId: string) => {
     return loans.filter(loan => loan.borrowerId === borrowerId);
+  };
+  
+  const archiveLoan = (id: string) => {
+    const loan = loans.find(loan => loan.id === id);
+    
+    if (!loan) {
+      toast({
+        title: "Erro",
+        description: "Empréstimo não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Só pode arquivar empréstimos pagos
+    if (loan.status !== 'paid') {
+      toast({
+        title: "Não é possível arquivar",
+        description: "Apenas empréstimos pagos podem ser arquivados",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Atualiza o status para 'archived'
+    setLoans(prev => 
+      prev.map(l => l.id === id ? { ...l, status: 'archived' as LoanStatus } : l)
+    );
+    
+    toast({
+      title: "Empréstimo arquivado",
+      description: `O empréstimo para ${loan.borrowerName} foi arquivado com sucesso.`
+    });
+  };
+  
+  const getArchivedLoans = () => {
+    return loans.filter(loan => loan.status === 'archived');
   };
   
   // Payment operations
@@ -906,6 +945,8 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     deleteLoan,
     getLoanById,
     getLoansByBorrowerId,
+    archiveLoan,
+    getArchivedLoans,
     addPayment,
     updatePayment,
     deletePayment,

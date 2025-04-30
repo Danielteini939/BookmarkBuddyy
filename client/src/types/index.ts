@@ -7,7 +7,7 @@ export type BorrowerType = {
   phone?: string;
 };
 
-export type LoanStatus = 'active' | 'paid' | 'overdue' | 'defaulted';
+export type LoanStatus = 'active' | 'paid' | 'overdue' | 'defaulted' | 'archived';
 
 export type PaymentFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
 

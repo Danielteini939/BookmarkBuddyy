@@ -68,6 +68,12 @@ export function getStatusColor(status: LoanStatus): {
         bgColor: 'bg-red-100',
         borderColor: 'border-red-300',
       };
+    case 'archived':
+      return {
+        textColor: 'text-slate-800',
+        bgColor: 'bg-slate-100',
+        borderColor: 'border-slate-300',
+      };
   }
 }
 
@@ -84,5 +90,7 @@ export function getStatusName(status: LoanStatus): string {
       return 'Vencido';
     case 'defaulted':
       return 'Inadimplente';
+    case 'archived':
+      return 'Arquivado';
   }
 }
