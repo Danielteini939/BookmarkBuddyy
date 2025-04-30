@@ -20,31 +20,18 @@ export default function LoanStatusChart() {
         chartInstanceRef.current.destroy();
       }
 
-      // Group loans by status and month
-      const today = new Date();
-      const months = [];
-      const activeData = [];
-      const paidData = [];
-      const overdueData = [];
-      const defaultedData = [];
-
-      // Generate last 11 months plus current month
-      for (let i = 10; i >= 0; i--) {
-        const month = new Date(today);
-        month.setMonth(today.getMonth() - i);
-        months.push(month.toLocaleString("pt-BR", { month: "short" }));
-      }
-      months.push(today.toLocaleString("pt-BR", { month: "short" }));
-
-      // Inicializar com zeros para todos os meses
-      for (let i = 0; i < 12; i++) {
-        activeData.push(0);
-        paidData.push(0);
-        overdueData.push(0);
-        defaultedData.push(0);
-      }
+      // Contar empréstimos por status
+      const activeLoanCount = loans.filter(loan => loan.status === 'active').length;
+      const paidLoanCount = loans.filter(loan => loan.status === 'paid').length;
+      const overdueLoanCount = loans.filter(loan => loan.status === 'overdue').length;
+      const defaultedLoanCount = loans.filter(loan => loan.status === 'defaulted').length;
       
-      // Se não houver empréstimos, vamos manter os zeros
+      console.log("Status counts for chart:", {
+        active: activeLoanCount,
+        paid: paidLoanCount,
+        overdue: overdueLoanCount,
+        defaulted: defaultedLoanCount
+      });
 
       // Verificar se o canvas existe
       if (!chartRef.current) return;
@@ -52,46 +39,28 @@ export default function LoanStatusChart() {
       const ctx = chartRef.current.getContext("2d");
       if (!ctx) return;
 
+      // Usar um gráfico de barras simples para mostrar o status atual
       chartInstanceRef.current = new Chart(ctx, {
-        type: "line",
+        type: "bar",
         data: {
-          labels: months,
+          labels: ["Ativos", "Pagos", "Vencidos", "Inadimplentes"],
           datasets: [
             {
-              label: "Ativos",
-              data: activeData,
-              borderColor: "#3b82f6",
-              backgroundColor: "rgba(59, 130, 246, 0.1)",
-              borderWidth: 2,
-              tension: 0.3,
-              fill: true,
-            },
-            {
-              label: "Pagos",
-              data: paidData,
-              borderColor: "#10b981",
-              backgroundColor: "rgba(16, 185, 129, 0.1)",
-              borderWidth: 2,
-              tension: 0.3,
-              fill: true,
-            },
-            {
-              label: "Vencidos",
-              data: overdueData,
-              borderColor: "#f59e0b",
-              backgroundColor: "rgba(245, 158, 11, 0.1)",
-              borderWidth: 2,
-              tension: 0.3,
-              fill: true,
-            },
-            {
-              label: "Inadimplentes",
-              data: defaultedData,
-              borderColor: "#ef4444",
-              backgroundColor: "rgba(239, 68, 68, 0.1)",
-              borderWidth: 2,
-              tension: 0.3,
-              fill: true,
+              label: "Empréstimos",
+              data: [activeLoanCount, paidLoanCount, overdueLoanCount, defaultedLoanCount],
+              backgroundColor: [
+                "rgba(59, 130, 246, 0.7)",   // Azul para ativos
+                "rgba(16, 185, 129, 0.7)",   // Verde para pagos
+                "rgba(245, 158, 11, 0.7)",   // Âmbar para vencidos
+                "rgba(239, 68, 68, 0.7)",    // Vermelho para inadimplentes
+              ],
+              borderColor: [
+                "rgb(59, 130, 246)",
+                "rgb(16, 185, 129)",
+                "rgb(245, 158, 11)",
+                "rgb(239, 68, 68)",
+              ],
+              borderWidth: 1,
             },
           ],
         },
@@ -100,17 +69,15 @@ export default function LoanStatusChart() {
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: "top",
-              labels: {
-                boxWidth: 12,
-                font: {
-                  size: 12,
-                },
-              },
+              display: false, // Ocultar a legenda pois é redundante com as labels do eixo X
             },
             tooltip: {
-              mode: "index",
-              intersect: false,
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y || 0;
+                  return `${value} empréstimo(s)`;
+                }
+              }
             },
           },
           scales: {
@@ -118,6 +85,7 @@ export default function LoanStatusChart() {
               beginAtZero: true,
               ticks: {
                 precision: 0,
+                stepSize: 1, // Forçar incrementos inteiros
               },
             },
           },
