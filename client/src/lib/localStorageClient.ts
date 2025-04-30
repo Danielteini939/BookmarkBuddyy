@@ -1,5 +1,4 @@
 import { BorrowerType, LoanType, PaymentType, AppSettings } from "@/types";
-import { mockBorrowers, mockLoans, mockPayments } from "@/utils/mockData";
 
 // Chaves para armazenar os dados no localStorage
 const STORAGE_KEYS = {
@@ -13,30 +12,30 @@ const STORAGE_KEYS = {
 export function loadBorrowers(): BorrowerType[] {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.BORROWERS);
-    return data ? JSON.parse(data) : mockBorrowers;
+    return data ? JSON.parse(data) : [];
   } catch (error) {
     console.error('Erro ao carregar mutuários:', error);
-    return mockBorrowers;
+    return [];
   }
 }
 
 export function loadLoans(): LoanType[] {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.LOANS);
-    return data ? JSON.parse(data) : mockLoans;
+    return data ? JSON.parse(data) : [];
   } catch (error) {
     console.error('Erro ao carregar empréstimos:', error);
-    return mockLoans;
+    return [];
   }
 }
 
 export function loadPayments(): PaymentType[] {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
-    return data ? JSON.parse(data) : mockPayments;
+    return data ? JSON.parse(data) : [];
   } catch (error) {
     console.error('Erro ao carregar pagamentos:', error);
-    return mockPayments;
+    return [];
   }
 }
 

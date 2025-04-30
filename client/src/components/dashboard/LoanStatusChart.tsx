@@ -36,11 +36,15 @@ export default function LoanStatusChart() {
       }
       months.push(today.toLocaleString("pt-BR", { month: "short" }));
 
-      // Simply use mock data for the chart
-      activeData.push(5, 6, 8, 9, 10, 12, 13, 12, 11, 12, 12, 12);
-      paidData.push(2, 3, 3, 4, 4, 3, 4, 5, 5, 5, 5, 5);
-      overdueData.push(0, 1, 1, 2, 1, 2, 2, 3, 2, 3, 3, 3);
-      defaultedData.push(0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1);
+      // Inicializar com zeros para todos os meses
+      for (let i = 0; i < 12; i++) {
+        activeData.push(0);
+        paidData.push(0);
+        overdueData.push(0);
+        defaultedData.push(0);
+      }
+      
+      // Se não houver empréstimos, vamos manter os zeros
 
       // Verificar se o canvas existe
       if (!chartRef.current) return;

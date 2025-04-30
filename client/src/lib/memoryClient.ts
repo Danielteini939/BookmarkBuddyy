@@ -1,5 +1,4 @@
 import { BorrowerType, LoanType, PaymentType, AppSettings } from "@/types";
-import { mockBorrowers, mockLoans, mockPayments } from "@/utils/mockData";
 
 // Dados armazenados apenas em memória (sem localStorage/cookies)
 // Iniciando com arrays vazios para permitir inserção manual de dados
