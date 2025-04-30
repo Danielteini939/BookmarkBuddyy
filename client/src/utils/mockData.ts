@@ -89,7 +89,7 @@ export const mockLoans: LoanType[] = [
     interestRate: 5,
     issueDate: monthsAgo(8),
     dueDate: monthsAgo(2),
-    status: 'archived' as LoanStatus,
+    status: 'archived' as LoanStatus, // Garantindo que pelo menos um empréstimo já está arquivado
     paymentSchedule: {
       frequency: 'monthly',
       nextPaymentDate: monthsAgo(2),
@@ -137,7 +137,7 @@ export const mockLoans: LoanType[] = [
     interestRate: 4,
     issueDate: monthsAgo(6),
     dueDate: monthsAgo(2),
-    status: 'paid' as LoanStatus,
+    status: 'archived' as LoanStatus, // Mudado para arquivado para teste
     paymentSchedule: {
       frequency: 'monthly',
       nextPaymentDate: monthsAgo(2),
@@ -215,14 +215,14 @@ export const mockLoans: LoanType[] = [
     borrowerName: 'Bruno Gomes',
     principal: 6000,
     interestRate: 5,
-    issueDate: monthsAgo(2),
-    dueDate: monthsFromNow(10),
-    status: 'active' as LoanStatus,
+    issueDate: monthsAgo(6),
+    dueDate: monthsAgo(1),
+    status: 'paid' as LoanStatus,
     paymentSchedule: {
       frequency: 'monthly',
-      nextPaymentDate: thisMonth(25), // Pagamento programado para dia 25 do mês atual
-      installments: 12,
-      installmentAmount: 525.00
+      nextPaymentDate: monthsAgo(1),
+      installments: 6,
+      installmentAmount: 1050.00
     }
   }
 ];
@@ -479,14 +479,59 @@ export const mockPayments: PaymentType[] = [
     notes: 'Pagamento em dia'
   },
   
-  // Bruno Gomes payments
+  // Bruno Gomes payments (paid in full)
+  {
+    id: generateId(),
+    loanId: '8',
+    date: monthsAgo(6),
+    amount: 1050.00,
+    principal: 950.00,
+    interest: 100.00,
+    notes: 'Pagamento em dia'
+  },
+  {
+    id: generateId(),
+    loanId: '8',
+    date: monthsAgo(5),
+    amount: 1050.00,
+    principal: 960.00,
+    interest: 90.00,
+    notes: 'Pagamento em dia'
+  },
+  {
+    id: generateId(),
+    loanId: '8',
+    date: monthsAgo(4),
+    amount: 1050.00,
+    principal: 970.00,
+    interest: 80.00,
+    notes: 'Pagamento em dia'
+  },
+  {
+    id: generateId(),
+    loanId: '8',
+    date: monthsAgo(3),
+    amount: 1050.00,
+    principal: 980.00,
+    interest: 70.00,
+    notes: 'Pagamento em dia'
+  },
+  {
+    id: generateId(),
+    loanId: '8',
+    date: monthsAgo(2),
+    amount: 1050.00,
+    principal: 990.00,
+    interest: 60.00,
+    notes: 'Pagamento em dia'
+  },
   {
     id: generateId(),
     loanId: '8',
     date: monthsAgo(1),
-    amount: 525.00,
-    principal: 450.00,
-    interest: 75.00,
-    notes: 'Pagamento em dia'
+    amount: 1050.00,
+    principal: 1000.00,
+    interest: 50.00,
+    notes: 'Pagamento final'
   },
 ];

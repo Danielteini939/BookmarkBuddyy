@@ -308,7 +308,10 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const getArchivedLoans = () => {
-    return loans.filter(loan => loan.status === 'archived');
+    console.log("getArchivedLoans chamado, total de empréstimos:", loans.length);
+    const archivedLoans = loans.filter(loan => loan.status === 'archived');
+    console.log("Empréstimos arquivados encontrados:", archivedLoans.length);
+    return archivedLoans;
   };
   
   // Payment operations

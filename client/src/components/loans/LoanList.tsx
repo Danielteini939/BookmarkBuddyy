@@ -64,12 +64,17 @@ export default function LoanList() {
   return (
     <Card>
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
-        <CardTitle className="text-xl font-semibold">Empréstimos</CardTitle>
+        <div>
+          <CardTitle className="text-xl font-semibold">Empréstimos</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Empréstimos arquivados não são exibidos nesta lista. <Link href="/loans/archived" className="text-primary font-medium underline">Ver empréstimos arquivados</Link>
+          </p>
+        </div>
         <div className="flex gap-2">
           <Link href="/loans/archived">
             <Button variant="outline">
               <Archive className="h-4 w-4 mr-2" />
-              Arquivados
+              Ver Arquivados
             </Button>
           </Link>
           <Link href="/loans/new">

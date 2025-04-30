@@ -31,11 +31,20 @@ export default function ArchivedLoans() {
   const [search, setSearch] = useState('');
   const archivedLoans = getArchivedLoans();
 
-  // Filter loans based on search term
-  const filteredLoans = archivedLoans.filter(loan => 
-    loan.borrowerName.toLowerCase().includes(search.toLowerCase()) ||
-    loan.principal.toString().includes(search)
-  );
+  // Garante que só empréstimos arquivados sejam exibidos
+  const filteredLoans = archivedLoans.filter(loan => {
+    console.log("Verificando empréstimo na página de arquivados:", loan);
+    
+    // Verificar se o empréstimo está arquivado
+    const isArchived = loan.status === 'archived';
+    
+    // Filtrar pelo termo de busca
+    const matchesSearch = 
+      loan.borrowerName.toLowerCase().includes(search.toLowerCase()) ||
+      loan.principal.toString().includes(search);
+    
+    return isArchived && matchesSearch;
+  });
 
   return (
     <div>
