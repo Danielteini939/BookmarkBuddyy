@@ -34,7 +34,7 @@ import { calculateRemainingBalance } from "@/utils/loanCalculations";
 import { LoanStatus, LoanType } from "@/types";
 
 export default function LoanList() {
-  const { loans, payments, getBorrowerById, archiveLoan } = useLoan();
+  const { loans, payments, getBorrowerById } = useLoan();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -165,16 +165,7 @@ export default function LoanList() {
                               Editar
                             </Button>
                           </Link>
-                          {loan.status === 'paid' && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => archiveLoan(loan.id)}
-                            >
-                              <Archive className="h-4 w-4 mr-1" />
-                              Arquivar
-                            </Button>
-                          )}
+                          {/* Botão de arquivar removido - essa função agora está na página de detalhes */}
                         </div>
                       </TableCell>
                     </TableRow>
