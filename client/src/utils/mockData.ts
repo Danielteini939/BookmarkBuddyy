@@ -24,6 +24,12 @@ const generateId = (): string => Math.random().toString(36).substring(2, 10);
 // Mock borrowers data
 export const mockBorrowers: BorrowerType[] = [
   {
+    id: '9',
+    name: 'Teresa Oliveira',
+    email: 'teresa.oliveira@email.com',
+    phone: '(11) 99876-5432'
+  },
+  {
     id: '1',
     name: 'Carlos Almeida',
     email: 'carlos.almeida@email.com',
@@ -75,6 +81,22 @@ export const mockBorrowers: BorrowerType[] = [
 
 // Mock loans data
 export const mockLoans: LoanType[] = [
+  {
+    id: '9',
+    borrowerId: '9',
+    borrowerName: 'Teresa Oliveira',
+    principal: 3000,
+    interestRate: 5,
+    issueDate: monthsAgo(8),
+    dueDate: monthsAgo(2),
+    status: 'archived' as LoanStatus,
+    paymentSchedule: {
+      frequency: 'monthly',
+      nextPaymentDate: monthsAgo(2),
+      installments: 6,
+      installmentAmount: 525.00
+    }
+  },
   {
     id: '1',
     borrowerId: '1',
@@ -207,6 +229,62 @@ export const mockLoans: LoanType[] = [
 
 // Mock payments data
 export const mockPayments: PaymentType[] = [
+  // Teresa Oliveira payments (archived loan)
+  {
+    id: generateId(),
+    loanId: '9',
+    date: monthsAgo(8),
+    amount: 525.00,
+    principal: 450.00,
+    interest: 75.00,
+    notes: 'Pagamento em dia'
+  },
+  {
+    id: generateId(),
+    loanId: '9',
+    date: monthsAgo(7),
+    amount: 525.00,
+    principal: 465.00,
+    interest: 60.00,
+    notes: 'Pagamento em dia'
+  },
+  {
+    id: generateId(),
+    loanId: '9',
+    date: monthsAgo(6),
+    amount: 525.00,
+    principal: 475.00,
+    interest: 50.00,
+    notes: 'Pagamento em dia'
+  },
+  {
+    id: generateId(),
+    loanId: '9',
+    date: monthsAgo(5),
+    amount: 525.00,
+    principal: 485.00,
+    interest: 40.00,
+    notes: 'Pagamento em dia'
+  },
+  {
+    id: generateId(),
+    loanId: '9',
+    date: monthsAgo(4),
+    amount: 525.00,
+    principal: 495.00,
+    interest: 30.00,
+    notes: 'Pagamento em dia'
+  },
+  {
+    id: generateId(),
+    loanId: '9',
+    date: monthsAgo(3),
+    amount: 525.00,
+    principal: 505.00,
+    interest: 20.00,
+    notes: 'Pagamento final'
+  },
+  
   // Carlos Almeida payments
   {
     id: generateId(),
