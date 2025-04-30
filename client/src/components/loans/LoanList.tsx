@@ -17,8 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { 
+  DropdownMenu,
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Search } from "lucide-react";
+import { PlusCircle, Search, MoreVertical, Archive, ExternalLink } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useLoan } from "@/context/LoanContext";
 import { formatCurrency, formatDate } from "@/utils/formatters";
@@ -26,7 +34,7 @@ import { calculateRemainingBalance } from "@/utils/loanCalculations";
 import { LoanStatus, LoanType } from "@/types";
 
 export default function LoanList() {
-  const { loans, payments, getBorrowerById } = useLoan();
+  const { loans, payments, getBorrowerById, archiveLoan } = useLoan();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -52,12 +60,20 @@ export default function LoanList() {
     <Card>
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
         <CardTitle className="text-xl font-semibold">Empréstimos</CardTitle>
-        <Link href="/loans/new">
-          <Button className="sm:ml-auto">
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Novo Empréstimo
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/loans/archived">
+            <Button variant="outline">
+              <Archive className="h-4 w-4 mr-2" />
+              Arquivados
+            </Button>
+          </Link>
+          <Link href="/loans/new">
+            <Button className="sm:ml-auto">
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Novo Empréstimo
+            </Button>
+          </Link>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
@@ -138,6 +154,16 @@ export default function LoanList() {
                               Editar
                             </Button>
                           </Link>
+                          {loan.status === 'paid' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => archiveLoan(loan.id)}
+                            >
+                              <Archive className="h-4 w-4 mr-1" />
+                              Arquivar
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

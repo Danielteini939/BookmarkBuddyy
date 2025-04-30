@@ -13,6 +13,7 @@ import LoanList from "@/pages/loans";
 import NewLoan from "@/pages/loans/new";
 import LoanDetails from "@/pages/loans/[id]";
 import EditLoan from "@/pages/loans/[id]/edit";
+import ArchivedLoans from "@/pages/loans/archived";
 import BorrowerList from "@/pages/borrowers";
 import NewBorrower from "@/pages/borrowers/new";
 import BorrowerDetails from "@/pages/borrowers/[id]";
@@ -57,6 +58,12 @@ function AppRoutes() {
       <ProtectedRoute path="/loans/:id/edit">
         <Layout>
           <EditLoan />
+        </Layout>
+      </ProtectedRoute>
+      
+      <ProtectedRoute path="/loans/archived">
+        <Layout>
+          <ArchivedLoans />
         </Layout>
       </ProtectedRoute>
       
