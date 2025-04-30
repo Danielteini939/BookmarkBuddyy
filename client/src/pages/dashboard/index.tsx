@@ -21,10 +21,10 @@ export default function Dashboard() {
   const metrics = getDashboardMetrics();
   const estimatedMonthlyPayments = getEstimatedMonthlyPayments();
   
-  // Calculate month-over-month growth
-  const activeLoanGrowthLastMonth = 12; // Example value, could be calculated based on historical data
-  const interestGrowthLastMonth = 8.5; // Example value, could be calculated based on historical data
-  const newOverdueLastMonth = 3; // Example value, could be calculated based on historical data
+  // Estes valores agora são todos zeros enquanto não há dados
+  const activeLoanGrowthLastMonth = 0;
+  const interestGrowthLastMonth = 0;
+  const newOverdueLastMonth = 0;
   
   // Obter o nome do mês atual para exibição
   const currentMonth = format(new Date(), 'MMMM', { locale: pt });
