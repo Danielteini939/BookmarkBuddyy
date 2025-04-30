@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import MobileNav from "./MobileNav";
+import OfflineIndicator from "./OfflineIndicator";
 import { useLocation } from "wouter";
 
 interface LayoutProps {
@@ -29,6 +30,9 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Mobile Navigation */}
       <MobileNav />
+      
+      {/* Offline Indicator */}
+      <OfflineIndicator />
     </div>
   );
 }
