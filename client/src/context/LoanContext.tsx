@@ -11,7 +11,7 @@ import { calculateRemainingBalance, determineNewLoanStatus } from "@/utils/loanC
 import { mockBorrowers, mockLoans, mockPayments } from "@/utils/mockData";
 import { parseCSV, generateCSV } from "@/utils/csvHelpers";
 import { useToast } from "@/hooks/use-toast";
-import { parseISO } from "date-fns";
+import { parseISO, format } from "date-fns";
 import {
   loadBorrowers,
   loadLoans,
@@ -374,7 +374,6 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const getEstimatedMonthlyPayments = (): number => {
-    // Função de log para debug
     console.log("Calculando pagamentos estimados para o mês");
     
     // Pegar todos os empréstimos ativos
@@ -410,58 +409,70 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     }
     
     // Processa empréstimos com programação de pagamento
-    loansWithSchedule.forEach(loan => {
-      if (!loan.paymentSchedule) return;
+    for (const loan of loansWithSchedule) {
+      if (!loan.paymentSchedule) continue;
       
       try {
-        // Tenta diferentes formatos de data
-        let nextPaymentDate;
+        // Pegamos a data do próximo pagamento de forma mais robusta
+        let nextPaymentDate: Date | null = null;
         const dateStr = loan.paymentSchedule.nextPaymentDate;
         
-        // Tenta primeiro como ISO
-        try {
-          nextPaymentDate = parseISO(dateStr);
-          
-          // Verificar se é uma data válida
-          if (isNaN(nextPaymentDate.getTime())) {
-            throw new Error('Data inválida após parseISO');
-          }
-          
-        } catch (e) {
-          // Tenta como DD/MM/YYYY
-          if (dateStr.includes('/')) {
-            const parts = dateStr.split('/');
-            if (parts.length === 3) {
-              const day = parseInt(parts[0], 10);
-              const month = parseInt(parts[1], 10) - 1; // Meses são 0-indexed
-              const year = parseInt(parts[2], 10);
-              nextPaymentDate = new Date(year, month, day);
-            } else {
-              console.warn('Formato de data inválido', dateStr);
-              return;
+        // Tratamento robusto para datas em diferentes formatos
+        if (typeof dateStr === 'string') {
+          try {
+            // Primeiro tenta como ISO
+            nextPaymentDate = new Date(dateStr);
+            
+            // Verifica se é uma data válida
+            if (isNaN(nextPaymentDate.getTime())) {
+              // Tenta parseISO como alternativa
+              nextPaymentDate = parseISO(dateStr);
+              
+              // Se ainda for inválida, tenta como DD/MM/YYYY
+              if (isNaN(nextPaymentDate.getTime()) && dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                  const day = parseInt(parts[0], 10);
+                  const month = parseInt(parts[1], 10) - 1; // Meses são 0-indexed
+                  const year = parseInt(parts[2], 10);
+                  nextPaymentDate = new Date(year, month, day);
+                } else {
+                  throw new Error('Formato de data inválido');
+                }
+              }
             }
-          } else {
-            console.warn('Formato de data não reconhecido', dateStr);
-            return;
+          } catch (e) {
+            console.warn('Erro ao processar data:', dateStr, e);
+            continue;
           }
+        } else {
+          console.warn('Data de pagamento não é uma string:', dateStr);
+          continue;
         }
         
-        // Verificar mês atual ou próximo pagamento
+        // Se depois de todas as tentativas a data ainda for inválida, pula este empréstimo
+        if (!nextPaymentDate || isNaN(nextPaymentDate.getTime())) {
+          console.warn('Data inválida após tentativas de conversão:', dateStr);
+          continue;
+        }
+        
+        // Agora temos certeza que temos uma data válida
+        // Verificamos se o pagamento é para o mês atual
         if (nextPaymentDate.getMonth() === currentMonth && 
             nextPaymentDate.getFullYear() === currentYear) {
-          // É este mês
+          
+          // É para este mês, adiciona ao total estimado
           estimatedTotal += loan.paymentSchedule.installmentAmount;
           console.log(`Pagamento para ${loan.borrowerName} este mês: ${loan.paymentSchedule.installmentAmount}`);
         } else {
-          // Mesmo que não seja este mês, incluir na estimativa se for um empréstimo ativo
-          // Assumindo que pagamentos serão feitos regularmente
-          estimatedTotal += loan.paymentSchedule.installmentAmount;
-          console.log(`Pagamento estimado para ${loan.borrowerName}: ${loan.paymentSchedule.installmentAmount}`);
+          // Formato da data de forma mais clara para o diagnóstico
+          const formattedDate = `${nextPaymentDate.getDate()}/${nextPaymentDate.getMonth() + 1}/${nextPaymentDate.getFullYear()}`;
+          console.log(`Pagamento para ${loan.borrowerName} não é para este mês (${currentMonth + 1}/${currentYear}). Data do próximo pagamento: ${formattedDate}`);
         }
       } catch (error) {
-        console.warn('Erro ao processar data de pagamento:', error);
+        console.warn('Erro ao processar empréstimo:', loan.id, error);
       }
-    });
+    }
     
     console.log(`Total estimado final: ${estimatedTotal}`);
     return estimatedTotal;

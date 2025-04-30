@@ -6,6 +6,13 @@ const monthsFromNow = (months: number): string => {
   return format(addMonths(new Date(), months), 'yyyy-MM-dd');
 };
 
+// Helper function to generate a date string for the current month with a specific day
+const thisMonth = (day: number = 15): string => {
+  const date = new Date();
+  date.setDate(day);
+  return format(date, 'yyyy-MM-dd');
+};
+
 // Helper function to generate a date string for n months ago
 const monthsAgo = (months: number): string => {
   return format(addMonths(new Date(), -months), 'yyyy-MM-dd');
