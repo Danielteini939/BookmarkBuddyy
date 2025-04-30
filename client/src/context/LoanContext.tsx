@@ -82,12 +82,142 @@ const initialSettings: AppSettings = {
 const LoanContext = createContext<LoanContextType | undefined>(undefined);
 
 export const LoanProvider = ({ children }: { children: ReactNode }) => {
-  // Inicializar com arrays vazios em vez de dados mockados
-  const [borrowers, setBorrowers] = useState<BorrowerType[]>([]);
+  // Dados de teste para simulação
+  const initialBorrowers: BorrowerType[] = [
+    {
+      id: "b1",
+      name: "João Silva",
+      email: "joao@teste.com",
+      phone: "11987654321"
+    },
+    {
+      id: "b2",
+      name: "Maria Santos",
+      email: "maria@teste.com",
+      phone: "11912345678"
+    },
+    {
+      id: "b3",
+      name: "Pedro Oliveira",
+      email: "pedro@teste.com",
+      phone: "11999998888"
+    }
+  ];
   
-  const [loans, setLoans] = useState<LoanType[]>([]);
+  const initialLoans: LoanType[] = [
+    {
+      id: "l1",
+      borrowerId: "b1",
+      borrowerName: "João Silva",
+      principal: 5000,
+      interestRate: 5,
+      issueDate: format(new Date(new Date().setMonth(new Date().getMonth() - 1)), 'yyyy-MM-dd'),
+      dueDate: format(new Date(new Date().setMonth(new Date().getMonth() + 11)), 'yyyy-MM-dd'),
+      status: 'active',
+      paymentSchedule: {
+        frequency: 'monthly',
+        nextPaymentDate: format(new Date(new Date().setDate(new Date().getDate() + 5)), 'yyyy-MM-dd'),
+        installments: 12,
+        installmentAmount: 437.50
+      }
+    },
+    {
+      id: "l2",
+      borrowerId: "b2",
+      borrowerName: "Maria Santos",
+      principal: 3000,
+      interestRate: 6,
+      issueDate: format(new Date(new Date().setMonth(new Date().getMonth() - 2)), 'yyyy-MM-dd'),
+      dueDate: format(new Date(new Date().setDate(new Date().getDate() - 5)), 'yyyy-MM-dd'),
+      status: 'overdue',
+      paymentSchedule: {
+        frequency: 'monthly',
+        nextPaymentDate: format(new Date(new Date().setDate(new Date().getDate() - 5)), 'yyyy-MM-dd'),
+        installments: 6,
+        installmentAmount: 525.00
+      }
+    },
+    {
+      id: "l3",
+      borrowerId: "b3",
+      borrowerName: "Pedro Oliveira",
+      principal: 10000,
+      interestRate: 4,
+      issueDate: format(new Date(new Date().setMonth(new Date().getMonth() - 6)), 'yyyy-MM-dd'),
+      dueDate: format(new Date(new Date().setMonth(new Date().getMonth() + 6)), 'yyyy-MM-dd'),
+      status: 'paid',
+      paymentSchedule: {
+        frequency: 'monthly',
+        nextPaymentDate: format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'yyyy-MM-dd'),
+        installments: 12,
+        installmentAmount: 866.67
+      }
+    }
+  ];
   
-  const [payments, setPayments] = useState<PaymentType[]>([]);
+  const initialPayments: PaymentType[] = [
+    {
+      id: "p1",
+      loanId: "l1",
+      date: format(new Date(new Date().setMonth(new Date().getMonth() - 1)), 'yyyy-MM-dd'),
+      amount: 437.50,
+      principal: 375.00,
+      interest: 62.50
+    },
+    {
+      id: "p2",
+      loanId: "l3",
+      date: format(new Date(new Date().setMonth(new Date().getMonth() - 5)), 'yyyy-MM-dd'),
+      amount: 866.67,
+      principal: 800.00,
+      interest: 66.67
+    },
+    {
+      id: "p3",
+      loanId: "l3",
+      date: format(new Date(new Date().setMonth(new Date().getMonth() - 4)), 'yyyy-MM-dd'),
+      amount: 866.67,
+      principal: 810.00,
+      interest: 56.67
+    },
+    {
+      id: "p4",
+      loanId: "l3",
+      date: format(new Date(new Date().setMonth(new Date().getMonth() - 3)), 'yyyy-MM-dd'),
+      amount: 866.67,
+      principal: 820.00,
+      interest: 46.67
+    },
+    {
+      id: "p5",
+      loanId: "l3",
+      date: format(new Date(new Date().setMonth(new Date().getMonth() - 2)), 'yyyy-MM-dd'),
+      amount: 866.67,
+      principal: 830.00,
+      interest: 36.67
+    },
+    {
+      id: "p6",
+      loanId: "l3",
+      date: format(new Date(new Date().setMonth(new Date().getMonth() - 1)), 'yyyy-MM-dd'),
+      amount: 866.67,
+      principal: 840.00,
+      interest: 26.67
+    },
+    {
+      id: "p7",
+      loanId: "l3",
+      date: format(new Date(), 'yyyy-MM-dd'),
+      amount: 866.67,
+      principal: 850.00,
+      interest: 16.67
+    }
+  ];
+
+  // Inicializar estados com dados de teste
+  const [borrowers, setBorrowers] = useState<BorrowerType[]>(initialBorrowers);
+  const [loans, setLoans] = useState<LoanType[]>(initialLoans);
+  const [payments, setPayments] = useState<PaymentType[]>(initialPayments);
   
   const [settings, setSettings] = useState<AppSettings>(() => {
     const storedSettings = loadSettings();
