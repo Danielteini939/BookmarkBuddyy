@@ -592,7 +592,11 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const getOverdueLoans = () => {
-    return loans.filter(loan => loan.status === 'overdue' || loan.status === 'defaulted');
+    // Filtrar empréstimos em atraso, excluindo arquivados
+    return loans.filter(loan => 
+      (loan.status === 'overdue' || loan.status === 'defaulted') && 
+      loan.status !== 'archived'
+    );
   };
   
   const getUpcomingDueLoans = (days: number) => {
@@ -604,6 +608,9 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     futureDate.setDate(today.getDate() + days);
     
     return loans.filter(loan => {
+      // Não incluir empréstimos arquivados
+      if (loan.status === 'archived') return false;
+      
       // Verificar empréstimos com programação de pagamento
       if (!loan.paymentSchedule || !loan.paymentSchedule.nextPaymentDate) return false;
       
