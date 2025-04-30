@@ -216,11 +216,11 @@ export const mockLoans: LoanType[] = [
     principal: 6000,
     interestRate: 5,
     issueDate: monthsAgo(6),
-    dueDate: monthsAgo(1),
-    status: 'paid' as LoanStatus,
+    dueDate: monthsFromNow(2),
+    status: 'overdue' as LoanStatus, // Alterado para overdue para aparecer na métrica
     paymentSchedule: {
       frequency: 'monthly',
-      nextPaymentDate: monthsAgo(1),
+      nextPaymentDate: thisMonth(25), // Alterado para o mês atual
       installments: 6,
       installmentAmount: 1050.00
     }
