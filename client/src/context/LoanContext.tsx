@@ -443,12 +443,12 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   const getEstimatedMonthlyPayments = (): number => {
     console.log("Calculando pagamentos estimados para o mês");
     
-    // Pegar todos os empréstimos não arquivados (ativos, vencidos, pagos não arquivados)
+    // Pegar todos os empréstimos não arquivados (ativos, vencidos)
     const validLoans = loans.filter(loan => 
       loan.status !== 'archived' && 
-      (loan.status === 'active' || loan.status === 'overdue' || loan.status === 'paid')
+      (loan.status === 'active' || loan.status === 'overdue')
     );
-    console.log(`Total de empréstimos não arquivados (ativos/vencidos/pagos): ${validLoans.length}`);
+    console.log(`Total de empréstimos não arquivados (ativos/vencidos): ${validLoans.length}`);
     
     // Verificar empréstimos com programações de pagamento
     const loansWithSchedule = validLoans.filter(loan => 
@@ -527,19 +527,25 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
           continue;
         }
         
-        // Adiciona o valor da parcela independentemente do mês
-        // para criar uma estimativa mais realista do fluxo mensal
-        estimatedTotal += loan.paymentSchedule.installmentAmount;
-        
-        // Log para diagnóstico
-        const formattedDate = `${nextPaymentDate.getDate()}/${nextPaymentDate.getMonth() + 1}/${nextPaymentDate.getFullYear()}`;
-        console.log(`Adicionando pagamento de ${loan.borrowerName}: ${loan.paymentSchedule.installmentAmount} (data: ${formattedDate})`);
+        // Verificamos se o pagamento é para o mês atual
+        if (nextPaymentDate.getMonth() === currentMonth && 
+            nextPaymentDate.getFullYear() === currentYear) {
+          
+          // É para este mês, adiciona ao total estimado
+          estimatedTotal += loan.paymentSchedule.installmentAmount;
+          const formattedDate = `${nextPaymentDate.getDate()}/${nextPaymentDate.getMonth() + 1}/${nextPaymentDate.getFullYear()}`;
+          console.log(`Adicionando pagamento de ${loan.borrowerName} PARA ESTE MÊS: ${loan.paymentSchedule.installmentAmount} (data: ${formattedDate})`);
+        } else {
+          // Formato da data de forma mais clara para o diagnóstico
+          const formattedDate = `${nextPaymentDate.getDate()}/${nextPaymentDate.getMonth() + 1}/${nextPaymentDate.getFullYear()}`;
+          console.log(`Pagamento de ${loan.borrowerName} NÃO é para este mês (${currentMonth + 1}/${currentYear}): ${loan.paymentSchedule.installmentAmount} (data: ${formattedDate})`);
+        }
       } catch (error) {
         console.warn('Erro ao processar empréstimo:', loan.id, error);
       }
     }
     
-    console.log(`Total estimado final: ${estimatedTotal}`);
+    console.log(`Total estimado final APENAS PARA ESTE MÊS: ${estimatedTotal}`);
     return estimatedTotal;
   };
 

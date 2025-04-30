@@ -172,7 +172,7 @@ export const mockLoans: LoanType[] = [
     status: 'defaulted' as LoanStatus,
     paymentSchedule: {
       frequency: 'monthly',
-      nextPaymentDate: monthsAgo(3),
+      nextPaymentDate: thisMonth(15), // Alterado para o mês atual
       installments: 3,
       installmentAmount: 535.00
     }
