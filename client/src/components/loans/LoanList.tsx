@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Search, MoreVertical, Archive, ExternalLink } from "lucide-react";
+import { PlusCircle, Search, MoreVertical, Archive, ExternalLink, Edit, Eye, CreditCard } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { useLoan } from "@/context/LoanContext";
 import { formatCurrency, formatDate } from "@/utils/formatters";
@@ -154,18 +154,22 @@ export default function LoanList() {
                       </TableCell>
                       <TableCell>{formatCurrency(getRemainingBalance(loan))}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1">
                           <Link href={`/loans/${loan.id}`}>
-                            <Button variant="outline" size="sm">
-                              Detalhes
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Ver detalhes">
+                              <Eye className="h-4 w-4" />
                             </Button>
                           </Link>
                           <Link href={`/loans/${loan.id}/edit`}>
-                            <Button variant="outline" size="sm">
-                              Editar
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Editar empréstimo">
+                              <Edit className="h-4 w-4" />
                             </Button>
                           </Link>
-                          {/* Botão de arquivar removido - essa função agora está na página de detalhes */}
+                          <Link href={`/payments/new?loanId=${loan.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" title="Registrar pagamento">
+                              <CreditCard className="h-4 w-4" />
+                            </Button>
+                          </Link>
                         </div>
                       </TableCell>
                     </TableRow>
