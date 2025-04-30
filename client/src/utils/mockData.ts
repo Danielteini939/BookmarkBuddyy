@@ -166,7 +166,7 @@ export const mockLoans: LoanType[] = [
     status: 'active' as LoanStatus,
     paymentSchedule: {
       frequency: 'monthly',
-      nextPaymentDate: monthsFromNow(1),
+      nextPaymentDate: thisMonth(20), // Pagamento programado para dia 20 do mês atual
       installments: 18,
       installmentAmount: 616.67
     }
@@ -198,7 +198,7 @@ export const mockLoans: LoanType[] = [
     status: 'active' as LoanStatus,
     paymentSchedule: {
       frequency: 'monthly',
-      nextPaymentDate: monthsFromNow(1),
+      nextPaymentDate: thisMonth(25), // Pagamento programado para dia 25 do mês atual
       installments: 12,
       installmentAmount: 525.00
     }
