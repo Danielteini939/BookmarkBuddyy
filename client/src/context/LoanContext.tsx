@@ -90,7 +90,13 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   
   const [loans, setLoans] = useState<LoanType[]>(() => {
     const storedLoans = loadLoans();
-    return storedLoans.length > 0 ? storedLoans : mockLoans;
+    const initialLoans = storedLoans.length > 0 ? storedLoans : mockLoans;
+    
+    // Verificar se há empréstimos arquivados nos dados iniciais
+    const archivedCount = initialLoans.filter(loan => loan.status === 'archived').length;
+    console.log("Inicializando empréstimos:", initialLoans.length, "Total | Arquivados:", archivedCount);
+    
+    return initialLoans;
   });
   
   const [payments, setPayments] = useState<PaymentType[]>(() => {

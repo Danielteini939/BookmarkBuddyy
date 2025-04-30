@@ -121,7 +121,7 @@ export const mockLoans: LoanType[] = [
     interestRate: 6,
     issueDate: monthsAgo(3),
     dueDate: monthsAgo(1),
-    status: 'overdue' as LoanStatus,
+    status: 'archived' as LoanStatus, // Status alterado para teste
     paymentSchedule: {
       frequency: 'monthly',
       nextPaymentDate: monthsAgo(1),
