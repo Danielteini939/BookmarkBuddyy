@@ -443,12 +443,15 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   const getEstimatedMonthlyPayments = (): number => {
     console.log("Calculando pagamentos estimados para o mês");
     
-    // Pegar todos os empréstimos ativos
-    const activeLoans = loans.filter(loan => loan.status === 'active');
-    console.log(`Total de empréstimos ativos: ${activeLoans.length}`);
+    // Pegar todos os empréstimos não arquivados (ativos, vencidos, pagos não arquivados)
+    const validLoans = loans.filter(loan => 
+      loan.status !== 'archived' && 
+      (loan.status === 'active' || loan.status === 'overdue' || loan.status === 'paid')
+    );
+    console.log(`Total de empréstimos não arquivados (ativos/vencidos/pagos): ${validLoans.length}`);
     
     // Verificar empréstimos com programações de pagamento
-    const loansWithSchedule = activeLoans.filter(loan => 
+    const loansWithSchedule = validLoans.filter(loan => 
       loan.paymentSchedule && 
       loan.paymentSchedule.nextPaymentDate && 
       loan.paymentSchedule.installmentAmount
@@ -464,14 +467,15 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     
     // Se não existirem empréstimos com programação, usar uma estimativa baseada no principal
     if (loansWithSchedule.length === 0) {
-      // Fallback: usar todos os empréstimos ativos e calcular um valor estimado
-      estimatedTotal = activeLoans.reduce((sum, loan) => {
+      // Fallback: usar todos os empréstimos válidos e calcular um valor estimado
+      estimatedTotal = validLoans.reduce((sum, loan) => {
         // Estimativa simples: valor do principal dividido por 12 (média de parcelas mensais)
-        const estimatedInstallment = loan.principal / 12;
+        // ou usar o valor de installmentAmount se disponível
+        const estimatedInstallment = loan.paymentSchedule?.installmentAmount || (loan.principal / 12);
         return sum + estimatedInstallment;
       }, 0);
       
-      console.log(`Usando estimativa com base no principal: ${estimatedTotal}`);
+      console.log(`Usando estimativa com base no principal/parcelas: ${estimatedTotal}`);
       return estimatedTotal;
     }
     
@@ -523,19 +527,13 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
           continue;
         }
         
-        // Agora temos certeza que temos uma data válida
-        // Verificamos se o pagamento é para o mês atual
-        if (nextPaymentDate.getMonth() === currentMonth && 
-            nextPaymentDate.getFullYear() === currentYear) {
-          
-          // É para este mês, adiciona ao total estimado
-          estimatedTotal += loan.paymentSchedule.installmentAmount;
-          console.log(`Pagamento para ${loan.borrowerName} este mês: ${loan.paymentSchedule.installmentAmount}`);
-        } else {
-          // Formato da data de forma mais clara para o diagnóstico
-          const formattedDate = `${nextPaymentDate.getDate()}/${nextPaymentDate.getMonth() + 1}/${nextPaymentDate.getFullYear()}`;
-          console.log(`Pagamento para ${loan.borrowerName} não é para este mês (${currentMonth + 1}/${currentYear}). Data do próximo pagamento: ${formattedDate}`);
-        }
+        // Adiciona o valor da parcela independentemente do mês
+        // para criar uma estimativa mais realista do fluxo mensal
+        estimatedTotal += loan.paymentSchedule.installmentAmount;
+        
+        // Log para diagnóstico
+        const formattedDate = `${nextPaymentDate.getDate()}/${nextPaymentDate.getMonth() + 1}/${nextPaymentDate.getFullYear()}`;
+        console.log(`Adicionando pagamento de ${loan.borrowerName}: ${loan.paymentSchedule.installmentAmount} (data: ${formattedDate})`);
       } catch (error) {
         console.warn('Erro ao processar empréstimo:', loan.id, error);
       }
