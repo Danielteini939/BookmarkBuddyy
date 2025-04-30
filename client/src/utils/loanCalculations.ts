@@ -96,6 +96,12 @@ export function calculatePaymentDistribution(
  * Determine the new status of a loan based on payments and dates
  */
 export function determineNewLoanStatus(loan: LoanType, payments: PaymentType[]): LoanStatus {
+  // Nunca mudar o status de empréstimos arquivados
+  if (loan.status === 'archived') {
+    console.log(`Mantendo status 'archived' para empréstimo ${loan.id}`);
+    return 'archived';
+  }
+  
   const remainingBalance = calculateRemainingBalance(loan, payments);
   
   // Se o empréstimo foi totalmente pago (o saldo restante é zero ou negativo)
