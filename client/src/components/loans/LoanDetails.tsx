@@ -26,7 +26,7 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import PaymentForm from "@/components/payments/PaymentForm";
 import { useLoan } from "@/context/LoanContext";
 import { formatCurrency, formatDate, formatPercentage } from "@/utils/formatters";
-import { Edit, Trash2, Calendar, User, DollarSign, Percent } from "lucide-react";
+import { Edit, Trash2, Calendar, User, DollarSign, Percent, Archive } from "lucide-react";
 import { parseISO, format, differenceInDays } from "date-fns";
 
 interface LoanDetailsProps {
@@ -40,7 +40,8 @@ export default function LoanDetails({ loanId }: LoanDetailsProps) {
     getBorrowerById, 
     getPaymentsByLoanId, 
     calculateLoanMetrics,
-    deleteLoan 
+    deleteLoan,
+    archiveLoan
   } = useLoan();
   const [activeTab, setActiveTab] = useState("details");
   
@@ -100,6 +101,40 @@ export default function LoanDetails({ loanId }: LoanDetailsProps) {
               Editar
             </Button>
           </Link>
+          
+          {/* Botão de Arquivar (somente visível para empréstimos pagos) */}
+          {loan.status === 'paid' && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="secondary">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Arquivar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Arquivar Empréstimo</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Você está prestes a arquivar este empréstimo. Empréstimos arquivados 
+                    serão movidos para a seção de "Arquivados" e não aparecerão na lista principal.
+                    Esta ação pode ser revertida posteriormente.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => {
+                    archiveLoan(loan.id);
+                    // Navegar para a lista de empréstimos arquivados
+                    navigate("/loans/archived");
+                  }}>
+                    Sim, arquivar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          
+          {/* Botão de Excluir */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">
