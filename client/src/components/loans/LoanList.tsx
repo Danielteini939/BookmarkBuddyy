@@ -40,6 +40,11 @@ export default function LoanList() {
 
   // Filter loans based on search term and status filter
   const filteredLoans = loans.filter((loan) => {
+    // Excluir empréstimos arquivados da lista principal
+    if (loan.status === 'archived') {
+      return false;
+    }
+    
     const borrower = getBorrowerById(loan.borrowerId);
     const matchesSearch = 
       borrower?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,6 +105,7 @@ export default function LoanList() {
               <SelectItem value="paid">Pagos</SelectItem>
               <SelectItem value="overdue">Vencidos</SelectItem>
               <SelectItem value="defaulted">Inadimplentes</SelectItem>
+              <SelectItem value="archived">Arquivados</SelectItem>
             </SelectContent>
           </Select>
         </div>

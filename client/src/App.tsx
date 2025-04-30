@@ -49,9 +49,9 @@ function AppRoutes() {
         </Layout>
       </ProtectedRoute>
       
-      <ProtectedRoute path="/loans/:id">
+      <ProtectedRoute path="/loans/archived">
         <Layout>
-          <LoanDetails />
+          <ArchivedLoans />
         </Layout>
       </ProtectedRoute>
       
@@ -61,9 +61,9 @@ function AppRoutes() {
         </Layout>
       </ProtectedRoute>
       
-      <ProtectedRoute path="/loans/archived">
+      <ProtectedRoute path="/loans/:id">
         <Layout>
-          <ArchivedLoans />
+          <LoanDetails />
         </Layout>
       </ProtectedRoute>
       

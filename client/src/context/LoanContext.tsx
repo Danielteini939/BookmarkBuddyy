@@ -266,7 +266,10 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const archiveLoan = (id: string) => {
+    console.log("Função archiveLoan chamada com ID:", id);
+    
     const loan = loans.find(loan => loan.id === id);
+    console.log("Empréstimo encontrado:", loan);
     
     if (!loan) {
       toast({
@@ -279,6 +282,7 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     
     // Só pode arquivar empréstimos pagos
     if (loan.status !== 'paid') {
+      console.log("Empréstimo não está com status pago:", loan.status);
       toast({
         title: "Não é possível arquivar",
         description: "Apenas empréstimos pagos podem ser arquivados",
@@ -288,9 +292,14 @@ export const LoanProvider = ({ children }: { children: ReactNode }) => {
     }
     
     // Atualiza o status para 'archived'
-    setLoans(prev => 
-      prev.map(l => l.id === id ? { ...l, status: 'archived' as LoanStatus } : l)
-    );
+    console.log("Atualizando status para 'archived'");
+    setLoans(prev => {
+      const updatedLoans = prev.map(l => 
+        l.id === id ? { ...l, status: 'archived' as LoanStatus } : l
+      );
+      console.log("Empréstimos atualizados:", updatedLoans);
+      return updatedLoans;
+    });
     
     toast({
       title: "Empréstimo arquivado",
